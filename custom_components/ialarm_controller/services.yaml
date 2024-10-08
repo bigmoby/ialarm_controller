@@ -1,0 +1,16 @@
+get_log:
+  description: "Retrieve the last n log entries from iAlarm."
+  target:
+    entity:
+      integration: ialarm_controller
+  fields:
+    max_entries:
+      name: "Max entries"
+      description: "The maximum number of log entries to retrieve."
+      required: true
+      example: "25"
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1

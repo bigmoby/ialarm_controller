@@ -1,0 +1,12 @@
+# https://www.home-assistant.io/integrations/default_config/
+default_config:
+
+logger:
+  default: info
+  logs:
+    custom_components.ialarm_controller: debug
+    custom_components.ialarm_controller.sensor: info
+    homeassistant.core: info
+    homeassistant.components.websocket_api: debug
+    homeassistant.helpers.script.websocket_api_script: debug
+    homeassistant.components.websocket_api.http.connection: info

@@ -1,0 +1,20 @@
+{
+  "domain": "ialarm_controller",
+  "name": "Antifurto365 iAlarm - async",
+  "codeowners": [
+    "@bigmoby",
+    "@RyuzakiKK"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/bigmoby/ialarm_controller/blob/main/README.md",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/bigmoby/ialarm_controller/issues",
+  "loggers": [
+    "pyasyncialarm"
+  ],
+  "requirements": [
+    "pyasyncialarm==2.3.0"
+  ],
+  "version": "0.0.1"
+}
