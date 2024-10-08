@@ -11,10 +11,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from pyasyncialarm.const import StatusType, ZoneStatusType
 
 from .const import DATA_COORDINATOR, DOMAIN, IAlarmStatusType
 from .coordinator import IAlarmCoordinator
-from pyasyncialarm.const import StatusType, ZoneStatusType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,14 +3,13 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from pyasyncialarm.pyasyncialarm import IAlarm
+import voluptuous as vol
 
 from .const import DEFAULT_PORT, DOMAIN
-from pyasyncialarm.pyasyncialarm import IAlarm
 
 _LOGGER = logging.getLogger(__name__)
 

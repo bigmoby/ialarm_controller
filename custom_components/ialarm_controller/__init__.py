@@ -8,10 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from pyasyncialarm.pyasyncialarm import IAlarm
 
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import IAlarmCoordinator
-from pyasyncialarm.pyasyncialarm import IAlarm
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.SENSOR]
 

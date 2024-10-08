@@ -7,10 +7,10 @@ import logging
 from homeassistant.components.alarm_control_panel import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import DOMAIN, IALARM_TO_HASS, IAlarmStatusType
 from pyasyncialarm.const import ZoneStatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
+
+from .const import DOMAIN, IALARM_TO_HASS, IAlarmStatusType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,7 +8,6 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-
 from pyasyncialarm.const import ZoneStatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
 

@@ -4,22 +4,20 @@ from __future__ import annotations
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, SupportsResponse, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import voluptuous as vol
 
 from .const import DATA_COORDINATOR, DOMAIN, IAlarmStatusType
 from .coordinator import IAlarmCoordinator
-from pyasyncialarm.const import LogEntryType
 
 _LOGGER = logging.getLogger(__name__)
 
