@@ -42,6 +42,8 @@ https://github.com/bigmoby/ialarm_controller
 
 In Home Assistant->Settings->Device & services->Integration menu add the new integration IAlarm and configure it.
 
+Service example:
+
 ```
 service: ialarm_controller.get_log
 data:
