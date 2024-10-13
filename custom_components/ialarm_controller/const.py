@@ -10,6 +10,7 @@ from homeassistant.const import (
 )
 from pyasyncialarm.const import ZoneStatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
+import voluptuous as vol
 
 DATA_COORDINATOR = "ialarm_controller"
 
@@ -22,6 +23,14 @@ IALARM_TO_HASS = {
     IAlarm.ARMED_STAY: STATE_ALARM_ARMED_HOME,
     IAlarm.DISARMED: STATE_ALARM_DISARMED,
     IAlarm.TRIGGERED: STATE_ALARM_TRIGGERED,
+}
+
+SERVICE_GET_LOG = "get_log"
+
+GET_LOG_ACTION_SCHEMA = {vol.Required("max_entries"): vol.Coerce(int)}
+
+ENTITY_SERVICES = {
+    SERVICE_GET_LOG: GET_LOG_ACTION_SCHEMA,
 }
 
 

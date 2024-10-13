@@ -26,10 +26,12 @@ async def _get_device_mac(hass: HomeAssistant, host, port):
     return await ialarm.get_mac()
 
 
-class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
+class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for Antifurto365 iAlarm."""
 
     VERSION = 1
+
+    DOMAIN = DOMAIN
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

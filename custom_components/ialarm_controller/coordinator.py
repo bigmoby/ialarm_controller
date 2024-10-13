@@ -36,7 +36,9 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         """Fetch data from iAlarm."""
         try:
             status = await self.ialarm_device.get_status()
-            zone_status: list[ZoneStatusType] = await self.ialarm_device.get_zone_status()
+            zone_status: list[ZoneStatusType] = (
+                await self.ialarm_device.get_zone_status()
+            )
             ialarm_status: IAlarmStatusType = IAlarmStatusType(
                 ialarm_status=IALARM_TO_HASS.get(status), zone_status_list=zone_status
             )

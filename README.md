@@ -45,12 +45,11 @@ In Home Assistant->Settings->Device & services->Integration menu add the new int
 Service example:
 
 ```
-service: ialarm_controller.get_log
+action: ialarm_controller.get_log
 data:
-  max_entries: "10"
+  max_entries: 25
 target:
-  entity_id: alarm_control_panel.ialarm
-
+  device_id: [your-device-id]
 ```
 
 ## Known issues and missing features:

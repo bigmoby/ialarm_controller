@@ -10,28 +10,15 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceResponse
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import voluptuous as vol
 
-from .const import DATA_COORDINATOR, DOMAIN, IAlarmStatusType
+from .const import DATA_COORDINATOR, DOMAIN, ENTITY_SERVICES, IAlarmStatusType
 from .coordinator import IAlarmCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-GET_LOG_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-    {
-        vol.Required("max_entries"): vol.Coerce(int),
-    }
-)
-
-SERVICE_GET_LOG = "get_log"
-
-ENTITY_SERVICES = {
-    SERVICE_GET_LOG:GET_LOG_ACTION_SCHEMA,
-}
 
 
 async def async_setup_entry(
@@ -47,9 +34,7 @@ async def async_setup_entry(
 
     for service_name, service_schema in ENTITY_SERVICES.items():
         platform.async_register_entity_service(
-            service_name,
-            service_schema,
-            f"async_{service_name}"
+            service_name, service_schema, f"async_{service_name}"
         )
 
 
@@ -100,13 +85,17 @@ class IAlarmPanel(CoordinatorEntity[IAlarmCoordinator], AlarmControlPanelEntity)
     async def async_get_log(self, max_entries: int) -> ServiceResponse:
         """Retrieve last n log entries."""
         items = await self.coordinator.ialarm_device.get_last_log_entries(max_entries)
-        return {
-            "items": [
-                {
-                    "time": item["time"],
-                    "area": item["area"],
-                    "event": item["event"],
-                    "name": item["name"],
-                } for item in items
-            ],
-        }
+        if items:
+            self.hass.bus.fire("ialarm_logs", items)
+            return {
+                "items": [
+                    {
+                        "time": item["time"],
+                        "area": item["area"],
+                        "event": item["event"],
+                        "name": item["name"],
+                    }
+                    for item in items
+                ],
+            }
+        return []
