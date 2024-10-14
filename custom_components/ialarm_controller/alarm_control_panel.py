@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -15,7 +16,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, ENTITY_SERVICES, IAlarmStatusType
+from .const import (
+    DATA_COORDINATOR,
+    DOMAIN,
+    ENTITY_SERVICES,
+    NOTIFICATION_ID,
+    NOTIFICATION_TITLE,
+    IAlarmStatusType,
+)
 from .coordinator import IAlarmCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,8 +79,18 @@ class IAlarmPanel(CoordinatorEntity[IAlarmCoordinator], AlarmControlPanelEntity)
         """Send disarm command."""
         # Require a code to be passed for disarm operations
         if code is None or code == "":
-            raise ValueError("Please input the disarm code.")
+            _LOGGER.error(
+                "Failed to disarm the alarm system. Please enter the disarm code."
+            )
+            persistent_notification.create(
+                self.hass,
+                "Failed to disarm the alarm system.<br/>Please enter the disarm code.",
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID,
+            )
+            return
         await self.coordinator.ialarm_device.disarm()
+        await self.coordinator.ialarm_device.cancel_alarm()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""

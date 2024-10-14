@@ -18,6 +18,9 @@ DEFAULT_PORT = 18034
 
 DOMAIN = "ialarm_controller"
 
+NOTIFICATION_ID = "ialarm_notification"
+NOTIFICATION_TITLE = "iAlarm notification"
+
 IALARM_TO_HASS = {
     IAlarm.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
     IAlarm.ARMED_STAY: STATE_ALARM_ARMED_HOME,
