@@ -1,3 +1,15 @@
+"""Defines the IAlarmEntity class for managing iAlarm entities.
+
+The IAlarmEntity class is a representation of an entity in the iAlarm
+system that interacts with the Home Assistant framework. It extends
+the CoordinatorEntity to facilitate coordination of updates for the
+iAlarm system and includes device information such as manufacturer
+and unique identifiers.
+
+Classes:
+- IAlarmEntity: Represents an entity in the iAlarm system.
+"""
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -6,6 +18,8 @@ from custom_components.ialarm_controller.coordinator import IAlarmCoordinator
 
 
 class IAlarmEntity(CoordinatorEntity[IAlarmCoordinator]):
+    """Represents an entity in the iAlarm system."""
+
     _attr_has_entity_name = True
 
     def __init__(

@@ -5,16 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 
-from homeassistant.components.button import (
-    ButtonDeviceClass,
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.ialarm_controller.const import SERVICE_GET_LOG_MAX_ENTRIES
 from custom_components.ialarm_controller.entity import IAlarmEntity
 
 from . import IAlarmConfigEntry
@@ -23,6 +18,13 @@ from .coordinator import IAlarmCoordinator
 
 @dataclass(frozen=True, kw_only=True)
 class IAlarmButtonDescription(ButtonEntityDescription):
+    """Describe an iAlarm button entity.
+
+    Attributes:
+        press_action: A callable that takes an IAlarmCoordinator instance and returns a coroutine to be awaited.
+
+    """
+
     press_action: Callable[[IAlarmCoordinator], Coroutine]
 
 
@@ -51,6 +53,20 @@ async def async_setup_entry(
     config_entry: IAlarmConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up iAlarm button entities from a config entry.
+
+    This function is called when the iAlarm config entry is set up in Home Assistant.
+    It creates and registers button entities based on the configuration.
+
+    Args:
+        hass: Home Assistant instance.
+        config_entry: The configuration entry for the iAlarm integration.
+        async_add_entities: Callback to add entities to Home Assistant.
+
+    Returns:
+        None
+
+    """
     coordinator = config_entry.runtime_data
     unique_id = config_entry.unique_id
     assert unique_id is not None
@@ -62,6 +78,20 @@ async def async_setup_entry(
 
 
 class IAlarmButton(IAlarmEntity, ButtonEntity):
+    """Represent a button entity for the iAlarm system.
+
+    This class is responsible for defining the behavior of buttons
+    that can trigger actions in the iAlarm system. It extends the
+    functionality of the ButtonEntity from Home Assistant to
+    facilitate custom actions based on the iAlarm integration.
+
+    Attributes:
+        entity_description (IAlarmButtonDescription):
+            The description of the button entity, containing metadata
+            such as action and key for the button.
+
+    """
+
     entity_description: IAlarmButtonDescription
 
     def __init__(
