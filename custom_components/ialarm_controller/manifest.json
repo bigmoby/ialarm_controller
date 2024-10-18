@@ -14,7 +14,7 @@
     "pyasyncialarm"
   ],
   "requirements": [
-    "pyasyncialarm==2.3.14"
+    "pyasyncialarm==2.3.16"
   ],
-  "version": "0.0.5"
+  "version": "1.0.0"
 }

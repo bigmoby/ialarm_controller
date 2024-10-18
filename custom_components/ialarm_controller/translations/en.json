@@ -11,10 +11,13 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port"
+                    "port": "Port",
+                    "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus."
                 },
                 "data_description": {
-                    "host": "The hostname or IP address of Antifurto365 iAlarm system."
+                    "host": "The hostname or IP address of Antifurto365 iAlarm system.",
+                    "port": "The IP port of Antifurto365 iAlarm system.",
+                    "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus."
                 }
             }
         }

@@ -16,10 +16,13 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "event": "[%key:common::config_flow::data::event%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of Antifurto365 iAlarm system."
+          "host": "The hostname or IP address of Antifurto365 iAlarm system.",
+          "port": "The IP port of Antifurto365 iAlarm system.",
+          "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus."
         }
       }
     },

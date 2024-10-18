@@ -15,6 +15,8 @@ import voluptuous as vol
 DATA_COORDINATOR = "ialarm_controller"
 
 DEFAULT_PORT = 18034
+DEFAULT_HOST = "192.168.1.81"
+DEFAULT_SEND_EVENTS = True
 
 DOMAIN = "ialarm_controller"
 
@@ -29,6 +31,7 @@ IALARM_TO_HASS = {
 }
 
 SERVICE_GET_LOG = "get_log"
+SERVICE_GET_LOG_MAX_ENTRIES = 25
 
 GET_LOG_ACTION_SCHEMA = {vol.Required("max_entries"): vol.Coerce(int)}
 

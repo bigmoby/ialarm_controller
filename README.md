@@ -15,8 +15,10 @@ This is a platform to support IAlarm under alarm panel component of Home Assista
 
 ## Sample UI:
 
-![UI_SCREENSHOT1](Capture.PNG)
-![UI_SCREENSHOT2](Capture2.PNG)
+![UI_SCREENSHOT3](Capture3.png)
+![UI_SCREENSHOT1](Capture.png)
+![UI_SCREENSHOT2](Capture2.png)
+
 
 ## Installation
 
@@ -38,11 +40,20 @@ https://github.com/bigmoby/ialarm_controller
 
 3. Reboot Home Assistant.
 
-### Usage:
+## Usage:
 
 In Home Assistant->Settings->Device & services->Integration menu add the new integration IAlarm and configure it.
 
-Service example:
+![UI_SCREENSHOT4](Capture4.png)
+
+### Events
+
+With this iAlarm integration will be available these Home Assistant Events: `ialarm_disarm`, `ialarm_arm_stay`, `ialarm_arm_away`, `ialarm_triggered`, `cancel_alarm`, `ialarm_logs`.
+
+
+### Services
+
+Invoke get iAlarm log service example:
 
 ```
 action: ialarm_controller.get_log
@@ -54,7 +65,7 @@ target:
 
 ## Known issues and missing features:
 
--
+- 
 
 ##
 

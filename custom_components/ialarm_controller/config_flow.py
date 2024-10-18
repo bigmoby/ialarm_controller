@@ -4,19 +4,20 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from pyasyncialarm.pyasyncialarm import IAlarm
 import voluptuous as vol
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SEND_EVENTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_EVENT, default=DEFAULT_SEND_EVENTS): bool,
     }
 )
 

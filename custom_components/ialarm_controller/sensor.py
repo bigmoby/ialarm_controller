@@ -3,22 +3,22 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from pyasyncialarm.const import StatusType, ZoneStatusType
+from pyasyncialarm.const import StatusType
 
-from .const import DATA_COORDINATOR, DOMAIN, IAlarmStatusType
+from custom_components.ialarm_controller.entity import IAlarmEntity
+
+from . import IAlarmConfigEntry
+from .const import IAlarmStatusType
 from .coordinator import IAlarmCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_IALARM_ZONE_STATUS = SensorEntityDescription(
+IAlarmZoneStatusSensorDescription = SensorEntityDescription(
     key="ALARMS",
     translation_key="alarms",
     entity_category=EntityCategory.DIAGNOSTIC,
@@ -26,61 +26,75 @@ SENSOR_IALARM_ZONE_STATUS = SensorEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: IAlarmConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up iAlarm Zone Status sensors."""
-    ialarm_coordinator: IAlarmCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-    async_add_entities([IAlarmSensorEntity(ialarm_coordinator)], False)
+    ialarm_coordinator = config_entry.runtime_data
+    unique_id = config_entry.unique_id
+    async_add_entities(
+        [IAlarmSensorEntity(ialarm_coordinator, unique_id, config_entry.title)], True
+    )
 
 
-class IAlarmSensorEntity(CoordinatorEntity[IAlarmCoordinator], SensorEntity):
+class IAlarmSensorEntity(IAlarmEntity, SensorEntity):
     """IAlarm sensor device."""
 
-    def __init__(self, coordinator: IAlarmCoordinator) -> None:
+    @staticmethod
+    def _get_sensor_data_attributes(
+        ialarm_status_data: IAlarmStatusType,
+    ) -> dict[str, str]:
+        """Get iAlarm status data."""
+        result: dict[str, str] = {}
+
+        if not ialarm_status_data:
+            return result
+
+        for zone in ialarm_status_data.get("zone_status_list", []):
+            zone_id = zone.get("zone_id")
+            zone_name = zone.get("name")
+            zone_status_type = zone.get("types")
+
+            _LOGGER.debug(
+                "Zone ID: %s, Name: %s, Status Types: %s",
+                zone_id,
+                zone_name,
+                zone_status_type,
+            )
+
+            if not (zone_id and zone_name):
+                continue
+
+            result[f"zone_{zone_id}_name"] = zone_name
+
+            if zone_status_type:
+                zone_status_list = [
+                    status_type.name
+                    for status_type in zone_status_type
+                    if isinstance(status_type, StatusType)
+                ]
+                if zone_status_list:
+                    result[f"zone_{zone_id}_status"] = ", ".join(zone_status_list)
+
+        return result
+
+    def __init__(
+        self, coordinator: IAlarmCoordinator, unique_id: str, name: str
+    ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
-        super().__init__(coordinator)
-        self.entity_description = SENSOR_IALARM_ZONE_STATUS
-        self._attr_unique_id = f"{coordinator.mac}-ialarm_zone_status"
-        self._attr_extra_state_attributes: dict[str, Any] = {}
-        self._attr_native_value = "ialarm_zone_status"
-        self.name = "ialarm_zone_status"
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = "iAlarm Zone status"
+        self._attr_native_value = "[...see Attributes section]"
+        self.entity_description = IAlarmZoneStatusSensorDescription
+        self._attr_extra_state_attributes = self._get_sensor_data_attributes(
+            self.coordinator.data
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        available = False
-
-        ialarm_status_data: IAlarmStatusType = self.coordinator.data
-        if ialarm_status_data:
-            zone_list_infos: list[ZoneStatusType] = ialarm_status_data[
-                "zone_status_list"
-            ]
-
-            for zone in zone_list_infos:
-                zone_id = zone.get("zone_id")
-                zone_name = zone.get("name")
-                zone_status_type: list[StatusType] = zone.get("types")
-                _LOGGER.debug(
-                    "Zone ID: %s, Name: %s, Status Types: %s",
-                    zone_id,
-                    zone_name,
-                    zone_status_type,
-                )
-
-                if zone_id is not None and zone_name is not None:
-                    self._attr_extra_state_attributes[f"zone_{zone_id}_name"] = (
-                        zone_name
-                    )
-                    zone_status_list = [
-                        status_type.name
-                        for status_type in zone_status_type
-                        if isinstance(status_type, StatusType)
-                    ]
-                    self._attr_extra_state_attributes[f"zone_{zone_id}_status"] = (
-                        ", ".join(zone_status_list)
-                    )
-
-        self._attr_available = available
+        self._attr_extra_state_attributes = self._get_sensor_data_attributes(
+            self.coordinator.data
+        )
         self.async_write_ha_state()

@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "ialarm_controller"
-version     = "0.3.24"
+version     = "1.0.0"
 license     = {text = "MIT License"}
-description = "IAlarm heat pump controller integration"
+description = "IAlarm controller integration"
 readme      = "README.md"
 authors     = [
     {name = "Fabio Bigmoby Mauro", email = ""}
@@ -19,7 +19,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.11",
-    "Topic :: IAlarm heat pump controller integration",
+    "Topic :: IAlarm controller integration",
 ]
 requires-python = ">=3.11.0"
 

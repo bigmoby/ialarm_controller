@@ -9,19 +9,18 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from custom_components.ialarm_controller.entity import IAlarmEntity
+
+from . import IAlarmConfigEntry
 from .const import (
-    DATA_COORDINATOR,
-    DOMAIN,
     ENTITY_SERVICES,
     NOTIFICATION_ID,
     NOTIFICATION_TITLE,
+    SERVICE_GET_LOG_MAX_ENTRIES,
     IAlarmStatusType,
 )
 from .coordinator import IAlarmCoordinator
@@ -30,13 +29,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: IAlarmConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a iAlarm alarm control panel based on a config entry."""
-    ialarm_coordinator: IAlarmCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-    async_add_entities([IAlarmPanel(ialarm_coordinator)], False)
+    ialarm_coordinator = config_entry.runtime_data
+    unique_id = config_entry.unique_id
+    async_add_entities(
+        [IAlarmPanel(ialarm_coordinator, unique_id, config_entry.title)], False
+    )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -46,26 +48,22 @@ async def async_setup_entry(
         )
 
 
-class IAlarmPanel(CoordinatorEntity[IAlarmCoordinator], AlarmControlPanelEntity):
+class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
     """Representation of an iAlarm device."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name = "iAlarm panel"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
     _attr_code_arm_required = False
 
-    def __init__(self, coordinator: IAlarmCoordinator) -> None:
+    def __init__(
+        self, coordinator: IAlarmCoordinator, unique_id: str, name: str
+    ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
-        super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.mac)},
-            manufacturer="Antifurto365 - Meian",
-            name="iAlarm",
-        )
-        self._attr_unique_id = f"{coordinator.mac}-ialarm_status"
+        super().__init__(coordinator, unique_id, name)
 
     @property
     def state(self) -> str | None:
@@ -91,29 +89,23 @@ class IAlarmPanel(CoordinatorEntity[IAlarmCoordinator], AlarmControlPanelEntity)
             return
         await self.coordinator.ialarm_device.disarm()
         await self.coordinator.ialarm_device.cancel_alarm()
+        if self.coordinator.send_events:
+            self.hass.bus.async_fire("ialarm_disarm", {"alarm_status": "DISARMED"})
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.coordinator.ialarm_device.arm_stay()
+        if self.coordinator.send_events:
+            self.hass.bus.async_fire("ialarm_arm_stay", {"alarm_status": "ARMED HOME"})
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.coordinator.ialarm_device.arm_away()
+        if self.coordinator.send_events:
+            self.hass.bus.async_fire("ialarm_arm_away", {"alarm_status": "ARMED AWAY"})
 
-    async def async_get_log(self, max_entries: int) -> ServiceResponse:
+    async def async_get_log(
+        self, max_entries: int = SERVICE_GET_LOG_MAX_ENTRIES
+    ) -> ServiceResponse:
         """Retrieve last n log entries."""
-        items = await self.coordinator.ialarm_device.get_last_log_entries(max_entries)
-        if items:
-            self.hass.bus.fire("ialarm_logs", items)
-            return {
-                "items": [
-                    {
-                        "time": item["time"],
-                        "area": item["area"],
-                        "event": item["event"],
-                        "name": item["name"],
-                    }
-                    for item in items
-                ],
-            }
-        return []
+        return await self.coordinator.async_get_log(max_entries)
