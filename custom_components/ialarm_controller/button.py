@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -21,11 +22,12 @@ class IAlarmButtonDescription(ButtonEntityDescription):
     """Describe an iAlarm button entity.
 
     Attributes:
-        press_action: A callable that takes an IAlarmCoordinator instance and returns a coroutine to be awaited.
+        press_action: A callable that takes an IAlarmCoordinator
+        instance and returns a coroutine to be awaited.
 
     """
 
-    press_action: Callable[[IAlarmCoordinator], Coroutine]
+    press_action: Callable[[IAlarmCoordinator], Coroutine[Any, Any, None]]
 
 
 BUTTONS: tuple[IAlarmButtonDescription, ...] = (
