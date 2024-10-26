@@ -33,7 +33,7 @@ class IAlarmButtonDescription(ButtonEntityDescription):
 BUTTONS: tuple[IAlarmButtonDescription, ...] = (
     IAlarmButtonDescription(
         key="CANCEL",
-        name="Cancel alarm alerts",
+        name="Cancel iAlarm alarm alerts",
         icon="mdi:playlist-remove",
         translation_key="cancel",
         entity_category=EntityCategory.CONFIG,

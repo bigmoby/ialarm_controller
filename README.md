@@ -1,4 +1,4 @@
-# IAlarm&trade; integration for homeassistant
+# IAlarm&trade; integration for homeassistant (unofficial)
 
 [![GitHub Release][releases-shield]][releases]
 ![Project Stage][project-stage-shield]
@@ -18,7 +18,6 @@ This is a platform to support IAlarm under alarm panel component of Home Assista
 ![UI_SCREENSHOT3](Capture3.png)
 ![UI_SCREENSHOT1](Capture.png)
 ![UI_SCREENSHOT2](Capture2.png)
-
 
 ## Installation
 
@@ -49,7 +48,6 @@ In Home Assistant->Settings->Device & services->Integration menu add the new int
 ### Events
 
 With this iAlarm integration will be available these Home Assistant Events: `ialarm_disarm`, `ialarm_arm_stay`, `ialarm_arm_away`, `ialarm_triggered`, `cancel_alarm`, `ialarm_logs`.
-
 
 ### Services
 
