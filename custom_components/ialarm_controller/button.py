@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -27,13 +26,13 @@ class IAlarmButtonDescription(ButtonEntityDescription):
 
     """
 
-    press_action: Callable[[IAlarmCoordinator], Coroutine[Any, Any, None]]
+    press_action: Callable[[IAlarmCoordinator], Awaitable[None]]
 
 
 BUTTONS: tuple[IAlarmButtonDescription, ...] = (
     IAlarmButtonDescription(
         key="CANCEL",
-        name="Cancel iAlarm alarm alerts",
+        name="Cancel alarm alerts",
         icon="mdi:playlist-remove",
         translation_key="cancel",
         entity_category=EntityCategory.CONFIG,
@@ -74,8 +73,11 @@ async def async_setup_entry(
     assert unique_id is not None
 
     async_add_entities(
-        IAlarmButton(coordinator, unique_id, config_entry.title, description)
-        for description in BUTTONS
+        (
+            IAlarmButton(coordinator, unique_id, config_entry.title, description)
+            for description in BUTTONS
+        ),
+        True,
     )
 
 

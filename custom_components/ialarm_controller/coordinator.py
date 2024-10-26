@@ -45,9 +45,13 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         self, max_entries: int = SERVICE_GET_LOG_MAX_ENTRIES
     ) -> ServiceResponse:
         """Retrieve last n log entries."""
+
+        _LOGGER.debug("Retrieve last %s log entries.", max_entries)
+
         items: list[LogEntryType] = await self.ialarm_device.get_last_log_entries(
             max_entries
         )
+
         if items:
             self.hass.bus.async_fire("ialarm_logs", items)
             return {

@@ -9,7 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
-from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -20,7 +20,6 @@ from .const import (
     ENTITY_SERVICES,
     NOTIFICATION_ID,
     NOTIFICATION_TITLE,
-    SERVICE_GET_LOG_MAX_ENTRIES,
     IAlarmStatusType,
 )
 from .coordinator import IAlarmCoordinator
@@ -103,9 +102,3 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
         await self.coordinator.ialarm_device.arm_away()
         if self.coordinator.send_events:
             self.hass.bus.async_fire("ialarm_arm_away", {"alarm_status": "ARMED AWAY"})
-
-    async def async_get_log(
-        self, max_entries: int = SERVICE_GET_LOG_MAX_ENTRIES
-    ) -> ServiceResponse:
-        """Retrieve last n log entries."""
-        return await self.coordinator.async_get_log(max_entries)
