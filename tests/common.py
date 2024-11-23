@@ -43,9 +43,6 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import device_automation, persistent_notification as pn
-from homeassistant.components.device_automation import (  # noqa: F401
-    _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
-)
 from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -298,7 +295,7 @@ async def async_test_home_assistant(
                 StoreWithoutWriteLoad,
             ),
             patch(
-                "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+                "homeassistant.helpers.storage.Store",  # Floor & label registry are different # noqa: E501
                 StoreWithoutWriteLoad,
             ),
             patch(
@@ -768,29 +765,28 @@ class MockModule:
         config_schema: vol.Schema | None = None,
         platform_schema: vol.Schema | None = None,
         platform_schema_base: vol.Schema | None = None,
-        async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
-        | None = None,
-        async_setup_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
-        ]
-        | None = None,
-        async_unload_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
-        ]
-        | None = None,
-        async_migrate_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
-        ]
-        | None = None,
-        async_remove_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
-        ]
-        | None = None,
+        async_setup: (
+            Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]] | None
+        ) = None,
+        async_setup_entry: (
+            Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]] | None
+        ) = None,
+        async_unload_entry: (
+            Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]] | None
+        ) = None,
+        async_migrate_entry: (
+            Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]] | None
+        ) = None,
+        async_remove_entry: (
+            Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]] | None
+        ) = None,
         partial_manifest: dict[str, Any] | None = None,
-        async_remove_config_entry_device: Callable[
-            [HomeAssistant, ConfigEntry, dr.DeviceEntry], Coroutine[Any, Any, bool]
-        ]
-        | None = None,
+        async_remove_config_entry_device: (
+            Callable[
+                [HomeAssistant, ConfigEntry, dr.DeviceEntry], Coroutine[Any, Any, bool]
+            ]
+            | None
+        ) = None,
     ) -> None:
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
@@ -853,22 +849,39 @@ class MockPlatform:
     def __init__(
         self,
         *,
-        setup_platform: Callable[
-            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
-            None,
-        ]
-        | None = None,
+        setup_platform: (
+            Callable[
+                [
+                    HomeAssistant,
+                    ConfigType,
+                    AddEntitiesCallback,
+                    DiscoveryInfoType | None,
+                ],
+                None,
+            ]
+            | None
+        ) = None,
         dependencies: list[str] | None = None,
         platform_schema: vol.Schema | None = None,
-        async_setup_platform: Callable[
-            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
-            Coroutine[Any, Any, None],
-        ]
-        | None = None,
-        async_setup_entry: Callable[
-            [HomeAssistant, ConfigEntry, AddEntitiesCallback], Coroutine[Any, Any, None]
-        ]
-        | None = None,
+        async_setup_platform: (
+            Callable[
+                [
+                    HomeAssistant,
+                    ConfigType,
+                    AddEntitiesCallback,
+                    DiscoveryInfoType | None,
+                ],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+        async_setup_entry: (
+            Callable[
+                [HomeAssistant, ConfigEntry, AddEntitiesCallback],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
         scan_interval: timedelta | None = None,
     ) -> None:
         """Initialize the platform."""
@@ -1316,12 +1329,12 @@ class MockEntity(entity.Entity):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added to the entity registry."""  # noqa: E501
         return self._handle("entity_registry_enabled_default")
 
     @property
     def entity_registry_visible_default(self) -> bool:
-        """Return if the entity should be visible when first added to the entity registry."""
+        """Return if the entity should be visible when first added to the entity registry."""  # noqa: E501
         return self._handle("entity_registry_visible_default")
 
     @property
@@ -1483,9 +1496,11 @@ def mock_integration(
     """Mock an integration."""
     integration = loader.Integration(
         hass,
-        f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
-        if built_in
-        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
+        (
+            f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
+            if built_in
+            else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}"
+        ),
         pathlib.Path(""),
         module.mock_manifest(),
         top_level_files,
@@ -1493,7 +1508,8 @@ def mock_integration(
 
     def mock_import_platform(platform_name: str) -> NoReturn:
         raise ImportError(
-            f"Mocked unable to import platform '{integration.pkg_path}.{platform_name}'",
+            "Mocked unable to import platform"
+            f" '{integration.pkg_path}.{platform_name}'",
             name=f"{integration.pkg_path}.{platform_name}",
         )
 
@@ -1547,9 +1563,9 @@ def async_capture_events(
 
 
 @callback
-def async_mock_signal[*_Ts](
-    hass: HomeAssistant, signal: SignalType[*_Ts] | str
-) -> list[tuple[*_Ts]]:
+def async_mock_signal[
+    *_Ts
+](hass: HomeAssistant, signal: SignalType[*_Ts] | str) -> list[tuple[*_Ts]]:
     """Catch all dispatches to a signal."""
     calls: list[tuple[*_Ts]] = []
 
@@ -1679,10 +1695,10 @@ def import_and_test_deprecated_constant(
         module.__name__,
         logging.WARNING,
         (
-            f"{constant_name} was used from test_constant_deprecation,"
-            f" this is a deprecated constant which will be removed in HA Core {breaks_in_ha_version}. "
-            f"Use {replacement_name} instead, please report "
-            "it to the author of the 'test_constant_deprecation' custom integration"
+            f"{constant_name} was used from test_constant_deprecation, this is a"
+            " deprecated constant which will be removed in HA Core"
+            f" {breaks_in_ha_version}. Use {replacement_name} instead, please report it"
+            " to the author of the 'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples
 
@@ -1713,10 +1729,10 @@ def import_and_test_deprecated_alias(
         module.__name__,
         logging.WARNING,
         (
-            f"{alias_name} was used from test_constant_deprecation,"
-            f" this is a deprecated alias which will be removed in HA Core {breaks_in_ha_version}. "
-            f"Use {replacement_name} instead, please report "
-            "it to the author of the 'test_constant_deprecation' custom integration"
+            f"{alias_name} was used from test_constant_deprecation, this is a"
+            " deprecated alias which will be removed in HA Core"
+            f" {breaks_in_ha_version}. Use {replacement_name} instead, please report it"
+            " to the author of the 'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples
 
