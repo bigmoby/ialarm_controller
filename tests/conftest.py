@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from tests.const import TEST_DATA_RESULT
+from tests.const import TEST_DATA
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -42,7 +42,7 @@ def mock_config_fixture():
     return MockConfigEntry(
         title="Mock iAlarm config entry",
         domain=DOMAIN,
-        data=TEST_DATA_RESULT,
+        data=TEST_DATA,
         unique_id=str(uuid4()),
         entry_id=str(uuid4()),
     )
