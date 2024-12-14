@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_DATA, TEST_DATA_RESULT, TEST_MAC
+from .const import TEST_DATA, TEST_MAC
 
 
 async def test_successful_config_flow(hass: HomeAssistant):
@@ -40,7 +40,7 @@ async def test_successful_config_flow(hass: HomeAssistant):
         assert len(mock_setup_entry.mock_calls) == 1
         assert result2["type"] == FlowResultType.CREATE_ENTRY
         assert result2["title"] == TEST_DATA["host"]
-        assert result2["data"] == TEST_DATA_RESULT
+        assert result2["data"] == TEST_DATA
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:

@@ -39,7 +39,7 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         """Cancel alarm alerts."""
         await self.ialarm_device.cancel_alarm()
         if self.send_events:
-            self.hass.bus.async_fire("cancel_alarm")
+            self.hass.bus.async_fire(event_type="cancel_alarm")
 
     async def async_get_log(
         self, max_entries: int = SERVICE_GET_LOG_MAX_ENTRIES
@@ -53,7 +53,7 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         )
 
         if items:
-            self.hass.bus.async_fire("ialarm_logs", items)
+            self.hass.bus.async_fire(event_type="ialarm_logs", event_data=items)
             return {
                 "items": [
                     {
@@ -86,8 +86,8 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
                     internal_alarm_status["alarmed_zones"]
                 )
                 self.hass.bus.async_fire(
-                    "ialarm_triggered",
-                    {
+                    event_type="ialarm_triggered",
+                    event_data={
                         "alarm_status": "TRIGGERED",
                         "alarmed_zones": ialarm_alarmed_zones,
                     },

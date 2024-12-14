@@ -89,16 +89,28 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
         await self.coordinator.ialarm_device.disarm()
         await self.coordinator.ialarm_device.cancel_alarm()
         if self.coordinator.send_events:
-            self.hass.bus.async_fire("ialarm_disarm", {"alarm_status": "DISARMED"})
+            _LOGGER.debug("Event ialarm_disarm was triggered")
+            event_data = {
+                "device_id": self.entity_id,
+                "type": "alarm_status",
+                "alarm_status": "DISARMED",
+            }
+            self.hass.bus.async_fire(event_type="ialarm_disarm", event_data=event_data)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.coordinator.ialarm_device.arm_stay()
         if self.coordinator.send_events:
-            self.hass.bus.async_fire("ialarm_arm_stay", {"alarm_status": "ARMED HOME"})
+            _LOGGER.debug("Event ialarm_arm_stay was triggered")
+            self.hass.bus.async_fire(
+                event_type="ialarm_arm_stay", event_data={"alarm_status": "ARMED HOME"}
+            )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.coordinator.ialarm_device.arm_away()
         if self.coordinator.send_events:
-            self.hass.bus.async_fire("ialarm_arm_away", {"alarm_status": "ARMED AWAY"})
+            _LOGGER.debug("Event ialarm_arm_away was triggered")
+            self.hass.bus.async_fire(
+                event_type="ialarm_arm_away", event_data={"alarm_status": "ARMED AWAY"}
+            )
