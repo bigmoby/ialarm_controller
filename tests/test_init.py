@@ -9,8 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 import pytest
-
-from tests.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 TEST_MAC = "00:00:54:12:34:56"
 
