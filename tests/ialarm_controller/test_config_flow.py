@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.ialarm.const import DOMAIN
+from custom_components.ialarm_controller.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,11 +25,11 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.ialarm.config_flow._get_device_mac",
+            "custom_components.ialarm_controller.config_flow._get_device_mac",
             return_value=TEST_MAC,
         ),
         patch(
-            "homeassistant.components.ialarm.async_setup_entry",
+            "custom_components.ialarm_controller.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
     ):
@@ -51,7 +51,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.ialarm.config_flow._get_device_mac",
+        "custom_components.ialarm_controller.config_flow._get_device_mac",
         side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -69,7 +69,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.ialarm.config_flow._get_device_mac",
+        "custom_components.ialarm_controller.config_flow._get_device_mac",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -95,7 +95,7 @@ async def test_form_already_exists(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.ialarm.config_flow._get_device_mac",
+        "custom_components.ialarm_controller.config_flow._get_device_mac",
         return_value=TEST_MAC,
     ):
         result2 = await hass.config_entries.flow.async_configure(

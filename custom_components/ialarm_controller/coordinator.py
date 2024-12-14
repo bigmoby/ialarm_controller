@@ -70,9 +70,9 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
     async def _async_update_data(self) -> IAlarmStatusType:
         """Fetch data from iAlarm."""
         try:
-            zone_status: list[ZoneStatusType] = (
-                await self.ialarm_device.get_zone_status()
-            )
+            zone_status: list[
+                ZoneStatusType
+            ] = await self.ialarm_device.get_zone_status()
             internal_alarm_status: AlarmStatusType = (
                 await self.ialarm_device.get_status(zone_status)
             )

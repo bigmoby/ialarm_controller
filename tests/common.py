@@ -1563,9 +1563,9 @@ def async_capture_events(
 
 
 @callback
-def async_mock_signal[
-    *_Ts
-](hass: HomeAssistant, signal: SignalType[*_Ts] | str) -> list[tuple[*_Ts]]:
+def async_mock_signal[*_Ts](
+    hass: HomeAssistant, signal: SignalType[*_Ts] | str
+) -> list[tuple[*_Ts]]:
     """Catch all dispatches to a signal."""
     calls: list[tuple[*_Ts]] = []
 
