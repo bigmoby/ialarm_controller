@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.alarm_control_panel import SCAN_INTERVAL
+from homeassistant.components.alarm_control_panel import (
+    SCAN_INTERVAL,
+    AlarmControlPanelState,
+)
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pyasyncialarm.const import AlarmStatusType, LogEntryType, ZoneStatusType
@@ -81,10 +84,21 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
                 internal_alarm_status["status_value"]
             )
 
-            if alarm_status_value == IAlarm.TRIGGERED and self.send_events:
+            _LOGGER.debug("iAlarm status [%s]", alarm_status_value)
+
+            if (
+                alarm_status_value == AlarmControlPanelState.TRIGGERED
+                and self.send_events
+            ):
                 ialarm_alarmed_zones: list[ZoneStatusType] | None = (
                     internal_alarm_status["alarmed_zones"]
                 )
+
+                _LOGGER.debug(
+                    "iAlarm in TRIGGERED status with allarmed zones [%s]",
+                    ialarm_alarmed_zones,
+                )
+
                 self.hass.bus.async_fire(
                     event_type="ialarm_triggered",
                     event_data={
