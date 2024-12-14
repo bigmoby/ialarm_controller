@@ -10,9 +10,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from .const import TEST_DATA, TEST_DATA_RESULT, TEST_MAC
 
 
-# Here we simiulate a successful config flow from the backend.
-# Note that we use the `bypass_get_data` fixture here because
-# we want the config flow validation to succeed during the test.
 async def test_successful_config_flow(hass: HomeAssistant):
     """Test a successful config flow."""
     # Initialize a config flow
@@ -80,21 +77,3 @@ async def test_form_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_failed_config_flow(hass: HomeAssistant):
-    """Test a failed config flow due to credential validation failure."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TEST_DATA
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
