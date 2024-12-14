@@ -3,29 +3,17 @@
 from unittest.mock import patch
 
 from custom_components.ialarm_controller.const import DOMAIN
-from homeassistant import config_entries, data_entry_flow
-import pytest
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_DATA, TEST_MAC
-
-
-# This fixture bypasses the actual setup of the integration
-# since we only want to test the config flow. We test the
-# actual functionality of the integration in other test modules.
-@pytest.fixture(autouse=True)
-def bypass_setup_fixture():
-    """Prevent setup."""
-    with patch(
-        "custom_components.ialarm_controller.async_setup_entry",
-        return_value=True,
-    ):
-        yield
+from .const import TEST_DATA, TEST_DATA_RESULT, TEST_MAC
 
 
 # Here we simiulate a successful config flow from the backend.
 # Note that we use the `bypass_get_data` fixture here because
 # we want the config flow validation to succeed during the test.
-async def test_successful_config_flow(hass):
+async def test_successful_config_flow(hass: HomeAssistant):
     """Test a successful config flow."""
     # Initialize a config flow
     result = await hass.config_entries.flow.async_init(
@@ -33,7 +21,7 @@ async def test_successful_config_flow(hass):
     )
 
     # Check that the config flow shows the user form as the first step
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -47,49 +35,15 @@ async def test_successful_config_flow(hass):
             return_value=True,
         ) as mock_setup_entry,
     ):
-        # If a user were to enter `test_username` for username and `test_password`
-        # for password, it would result in this function call
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=TEST_DATA
         )
         await hass.async_block_till_done()
-        # Check that the config flow is complete and a new entry is created with
-        # the input data
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == TEST_DATA["host"]
-        assert result2["data"] == TEST_DATA
+
         assert len(mock_setup_entry.mock_calls) == 1
-
-
-'''
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
-
-    with (
-        patch(
-            "custom_components.ialarm_controller.config_flow._get_device_mac",
-            return_value=TEST_MAC,
-        ),
-        patch(
-            "custom_components.ialarm_controller.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_DATA["host"]
-    assert result2["data"] == TEST_DATA
-    assert len(mock_setup_entry.mock_calls) == 1
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == TEST_DATA["host"]
+        assert result2["data"] == TEST_DATA_RESULT
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -128,69 +82,31 @@ async def test_form_exception(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_exists(hass: HomeAssistant) -> None:
-    """Test that a flow with an existing host aborts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_MAC,
-        data=TEST_DATA,
-    )
-
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "custom_components.ialarm_controller.config_flow._get_device_mac",
-        return_value=TEST_MAC,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
-
-
-
-
-
-
-
-
-
-
-
-# In this case, we want to simulate a failure during the config flow.
-# We use the `error_on_get_data` mock instead of `bypass_get_data`
-# (note the function parameters) to raise an Exception during
-# validation of the input config.
-async def test_failed_config_flow(hass, error_on_get_data):
+async def test_failed_config_flow(hass: HomeAssistant):
     """Test a failed config flow due to credential validation failure."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG
+        result["flow_id"], user_input=TEST_DATA
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "auth"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
+'''
 # Our config flow also has an options flow, so we must test it as well.
 async def test_options_flow(hass):
     """Test an options flow."""
     # Create a new MockConfigEntry and add to HASS (we're bypassing config
     # flow entirely)
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA, entry_id="test")
     entry.add_to_hass(hass)
 
     # Initialize an options flow
@@ -198,7 +114,7 @@ async def test_options_flow(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     # Verify that the first options step is a user form
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Enter some fake data into the form
@@ -208,10 +124,9 @@ async def test_options_flow(hass):
     )
 
     # Verify that the flow finishes
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test_username"
 
     # Verify that the options were updated
     assert entry.options == {BINARY_SENSOR: True, SENSOR: False, SWITCH: True}
-
 '''
