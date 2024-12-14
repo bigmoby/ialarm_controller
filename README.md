@@ -61,6 +61,32 @@ target:
   device_id: [your-device-id]
 ```
 
+## Develop
+
+Setup the environment invoking:
+
+```
+./scripts/setup
+```
+
+and each time you start a new terminal session, you will need to activate your virtual environment:
+
+```
+source venv/bin/activate
+```
+
+After that you can run Home Assistant like this:
+
+```
+./scripts/develop
+```
+
+Test your source code (not in Dev Container) with, for example:
+
+```
+pytest tests/test_config_flow.py
+```
+
 ## Known issues and missing features:
 
 -

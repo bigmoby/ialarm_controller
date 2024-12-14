@@ -5,11 +5,10 @@ from uuid import uuid4
 
 from custom_components.ialarm_controller import update_listener
 from custom_components.ialarm_controller.const import DOMAIN
-import pytest
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+import pytest
 
 from tests.common import MockConfigEntry
 

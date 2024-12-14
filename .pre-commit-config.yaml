@@ -2,11 +2,14 @@ default_language_version:
   python: python3.12
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.5
+    rev: v0.7.0
     hooks:
       - id: ruff
         args:
           - --fix
+      - id: ruff-format
+        files: ^((custom_components|tests)/.+)?[^/]+\.(py|pyi)$
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -21,12 +24,6 @@ repos:
         args:
           - --line-length=88
           - --preview
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - pydocstyle==6.3.0
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.9.0
     hooks:
@@ -34,5 +31,6 @@ repos:
         args: [--strict]
         language: python
         language_version: python3.12
+        files: ^(custom_components)/.+\.(py)$
         additional_dependencies:
           - "pydantic>=1.10.12"
