@@ -45,11 +45,35 @@ In Home Assistant->Settings->Device & services->Integration menu add the new int
 
 ![UI_SCREENSHOT4](Capture4.png)
 
-### Events
+## Events
 
 With this iAlarm integration will be available these Home Assistant Events: `ialarm_disarm`, `ialarm_arm_stay`, `ialarm_arm_away`, `ialarm_triggered`, `cancel_alarm`, `ialarm_logs`.
 
-### Services
+## Automations
+
+### Trigger a Notification When iAlarm is Triggered
+
+This automation allows you to send a notification if the iAlarm system is in a triggered state:
+
+```
+alias: Alarm Zone Notification
+description: "Sends a notification when a zone in iAlarm is triggered."
+triggers:
+  - platform: event
+    event_type: ialarm_triggered
+    variables:
+      triggered_zone: "{{ trigger.event.data.alarmed_zones[0].name }}"
+conditions: []
+actions:
+  - service: notify.persistent_notification
+    data:
+      title: "Alarm Triggered"
+      message: "Attention: The zone [{{ triggered_zone }}] is in alarm!"
+mode: single
+
+```
+
+## Services
 
 Invoke get iAlarm log service example:
 
