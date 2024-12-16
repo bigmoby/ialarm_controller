@@ -1,4 +1,4 @@
 -r requirements.txt
 pytest-homeassistant-custom-component==0.13.193
-syrupy==4.7.2
+syrupy==4.8.0
 pre-commit==4.0.1
