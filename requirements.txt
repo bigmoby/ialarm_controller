@@ -1,5 +1,5 @@
 colorlog==6.9.0
 homeassistant==2024.12.3
 pip>=24.2,<24.4
-ruff==0.8.6
+ruff==0.9.4
 pyasyncialarm==2.3.16
