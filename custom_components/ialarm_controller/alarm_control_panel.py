@@ -75,42 +75,45 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         # Require a code to be passed for disarm operations
-        if code is None or code == "":
-            _LOGGER.error(
-                "Failed to disarm the alarm system. Please enter the disarm code."
-            )
-            persistent_notification.create(
-                self.hass,
-                "Failed to disarm the alarm system.<br/>Please enter the disarm code.",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID,
-            )
-            return
-        await self.coordinator.ialarm_device.disarm()
-        await self.coordinator.ialarm_device.cancel_alarm()
-        if self.coordinator.send_events:
-            _LOGGER.debug("Event ialarm_disarm was triggered")
-            event_data = {
-                "device_id": self.entity_id,
-                "type": "alarm_status",
-                "alarm_status": "DISARMED",
-            }
-            self.hass.bus.async_fire(event_type="ialarm_disarm", event_data=event_data)
+        # now disabled, can't find how to configure it in the documentation
+#        if code is None or code == "":
+#            _LOGGER.error(
+#                "Failed to disarm the alarm system. Please enter the disarm code."
+#            )
+#            persistent_notification.create(
+#                self.hass,
+#                "Failed to disarm the alarm system.<br/>Please enter the disarm code.",
+#                title=NOTIFICATION_TITLE,
+#                notification_id=NOTIFICATION_ID,
+#            )
+#            return
+        async with self.coordinator._io_lock:
+            await self.coordinator.ialarm_device.disarm()
+            if self.coordinator.send_events:
+                _LOGGER.debug("Event ialarm_disarm was triggered")
+                event_data = {
+                    "device_id": self.entity_id,
+                    "type": "alarm_status",
+                    "alarm_status": "DISARMED",
+                }
+                self.hass.bus.async_fire(event_type="ialarm_disarm", event_data=event_data)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self.coordinator.ialarm_device.arm_stay()
-        if self.coordinator.send_events:
-            _LOGGER.debug("Event ialarm_arm_stay was triggered")
-            self.hass.bus.async_fire(
-                event_type="ialarm_arm_stay", event_data={"alarm_status": "ARMED HOME"}
-            )
+        async with self.coordinator._io_lock:
+            await self.coordinator.ialarm_device.arm_stay()
+            if self.coordinator.send_events:
+                _LOGGER.debug("Event ialarm_arm_stay was triggered")
+                self.hass.bus.async_fire(
+                    event_type="ialarm_arm_stay", event_data={"alarm_status": "ARMED HOME"}
+                )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self.coordinator.ialarm_device.arm_away()
-        if self.coordinator.send_events:
-            _LOGGER.debug("Event ialarm_arm_away was triggered")
-            self.hass.bus.async_fire(
-                event_type="ialarm_arm_away", event_data={"alarm_status": "ARMED AWAY"}
-            )
+        async with self.coordinator._io_lock:
+            await self.coordinator.ialarm_device.arm_away()
+            if self.coordinator.send_events:
+                _LOGGER.debug("Event ialarm_arm_away was triggered")
+                self.hass.bus.async_fire(
+                    event_type="ialarm_arm_away", event_data={"alarm_status": "ARMED AWAY"}
+                )
