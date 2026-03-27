@@ -12,12 +12,28 @@
                 "data": {
                     "host": "Indirizzo (IP o Hostname)",
                     "port": "Porta",
-                    "event": "Invia eventi iAlarm sul bus di Home Assistant"
+                    "event": "Invia eventi iAlarm sul bus di Home Assistant",
+                    "require_code_to_arm": "Codice obbligatorio per Armare",
+                    "require_code_to_disarm": "Codice obbligatorio per Disarmare"
                 },
                 "data_description": {
                     "host": "L'indirizzo IP o l'hostname della centrale Antifurto365 iAlarm.",
                     "port": "La porta IP della centrale Antifurto365 iAlarm.",
-                    "event": "Seleziona se la centrale deve inviare messaggi di evento nel log di Home Assistant."
+                    "event": "Seleziona se la centrale deve inviare messaggi di evento nel log di Home Assistant.",
+                    "require_code_to_arm": "Richiede l'inserimento di un PIN valido prima di poter procedere con l'attivazione dell'allarme dalla UI.",
+                    "require_code_to_disarm": "Richiede l'inserimento di un PIN valido prima di poter spegnere l'allarme dalla UI."
+                }
+            },
+            "init": {
+                "data": {
+                    "event": "Invia eventi sul bus HA",
+                    "require_code_to_arm": "Codice obbligatorio per Armare",
+                    "require_code_to_disarm": "Codice obbligatorio per Disarmare"
+                },
+                "data_description": {
+                    "event": "Seleziona se la centrale deve inviare messaggi di evento nel log di Home Assistant.",
+                    "require_code_to_arm": "Richiede l'inserimento di un PIN valido prima di poter procedere con l'attivazione dell'allarme dalla UI.",
+                    "require_code_to_disarm": "Richiede l'inserimento di un PIN valido prima di poter spegnere l'allarme dalla UI."
                 }
             }
         }

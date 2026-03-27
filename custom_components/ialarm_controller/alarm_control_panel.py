@@ -18,7 +18,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from custom_components.ialarm_controller.entity import IAlarmEntity
 
 from . import IAlarmConfigEntry
-from .const import ENTITY_SERVICES, NOTIFICATION_ID, NOTIFICATION_TITLE
+from .const import (
+    CONF_REQUIRE_CODE_TO_ARM,
+    CONF_REQUIRE_CODE_TO_DISARM,
+    DEFAULT_REQUIRE_CODE_TO_ARM,
+    DEFAULT_REQUIRE_CODE_TO_DISARM,
+    ENTITY_SERVICES,
+    NOTIFICATION_ID,
+    NOTIFICATION_TITLE,
+)
 from .coordinator import IAlarmCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +42,8 @@ async def async_setup_entry(
     if not (unique_id := config_entry.unique_id):
         return
     async_add_entities(
-        [IAlarmPanel(ialarm_coordinator, unique_id, config_entry.title)], False
+        [IAlarmPanel(ialarm_coordinator, config_entry, unique_id, config_entry.title)],
+        False,
     )
 
     platform = entity_platform.async_get_current_platform()
@@ -58,10 +67,35 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
     _attr_code_format = CodeFormat.NUMBER
 
     def __init__(
-        self, coordinator: IAlarmCoordinator, unique_id: str, name: str
+        self,
+        coordinator: IAlarmCoordinator,
+        config_entry: IAlarmConfigEntry,
+        unique_id: str,
+        name: str,
     ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         super().__init__(coordinator, unique_id, name)
+
+        self._require_code_to_arm = config_entry.options.get(
+            CONF_REQUIRE_CODE_TO_ARM,
+            config_entry.data.get(
+                CONF_REQUIRE_CODE_TO_ARM, DEFAULT_REQUIRE_CODE_TO_ARM
+            ),
+        )
+        self._require_code_to_disarm = config_entry.options.get(
+            CONF_REQUIRE_CODE_TO_DISARM,
+            config_entry.data.get(
+                CONF_REQUIRE_CODE_TO_DISARM, DEFAULT_REQUIRE_CODE_TO_DISARM
+            ),
+        )
+
+        self._attr_code_arm_required = self._require_code_to_arm
+
+        if self._require_code_to_arm or self._require_code_to_disarm:
+            self._attr_code_format = CodeFormat.NUMBER
+        else:
+            self._attr_code_format = None
+
         if coordinator.data:
             self._attr_alarm_state = coordinator.data.get("ialarm_status")
 
@@ -75,7 +109,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         # Require a code to be passed for disarm operations
-        if code is None or code == "":
+        if self._require_code_to_disarm and (code is None or code == ""):
             _LOGGER.error(
                 "Failed to disarm the alarm system. Please enter the disarm code."
             )
@@ -107,7 +141,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         # Require a code to be passed for arm operations
-        if code is None or code == "":
+        if self._require_code_to_arm and (code is None or code == ""):
             _LOGGER.error("Failed to arm home the alarm system. Please enter the code.")
             persistent_notification.create(
                 self.hass,
@@ -126,7 +160,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         # Require a code to be passed for arm operations
-        if code is None or code == "":
+        if self._require_code_to_arm and (code is None or code == ""):
             _LOGGER.error("Failed to arm away the alarm system. Please enter the code.")
             persistent_notification.create(
                 self.hass,

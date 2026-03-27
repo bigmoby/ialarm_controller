@@ -17,7 +17,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from pyasyncialarm.pyasyncialarm import IAlarm
 
-from .const import DOMAIN
+from .const import DEFAULT_SEND_EVENTS, DOMAIN
 from .coordinator import IAlarmCoordinator
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.SENSOR, Platform.BUTTON]
@@ -31,7 +31,11 @@ async def async_setup_entry(
     """Set up iAlarm config."""
     host: str = config_entry.data[CONF_HOST]
     port: int = config_entry.data[CONF_PORT]
-    send_events: bool = config_entry.data[CONF_EVENT]
+
+    # Read send_events from options, fallback to data for backwards compatibility
+    send_events: bool = config_entry.options.get(
+        CONF_EVENT, config_entry.data.get(CONF_EVENT, DEFAULT_SEND_EVENTS)
+    )
     ialarm_device = IAlarm(host, port)
 
     try:

@@ -13,6 +13,11 @@ DEFAULT_PORT = 18034
 DEFAULT_HOST = "192.168.1.81"
 DEFAULT_SEND_EVENTS = True
 
+CONF_REQUIRE_CODE_TO_ARM = "require_code_to_arm"
+CONF_REQUIRE_CODE_TO_DISARM = "require_code_to_disarm"
+DEFAULT_REQUIRE_CODE_TO_ARM = True
+DEFAULT_REQUIRE_CODE_TO_DISARM = True
+
 DOMAIN = "ialarm_controller"
 
 NOTIFICATION_ID = "ialarm_notification"

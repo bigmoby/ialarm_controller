@@ -1,7 +1,7 @@
 colorlog>=6.9.0
 # Home Assistant Core (requires Python >= 3.14.2)
 homeassistant>=2026.3.4
-pip>=24.2,<25.4
+pip>=26.0
 ruff>=0.14.2
 pyasyncialarm>=2.3.17
 pre-commit>=4.3.0
