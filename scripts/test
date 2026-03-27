@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "Running tests with coverage..."
+pytest tests/ \
+    --cov=custom_components \
+    --cov-report=term-missing \
+    --cov-report=html \
+    --cov-report=xml \
+    --cov-fail-under=80 \
+    --verbose
+
+echo "Generating coverage report..."
+coverage html
+coverage xml
+
+echo "Tests completed! ✅"
+echo "Coverage report available at: htmlcov/index.html"
