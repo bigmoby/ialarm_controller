@@ -78,6 +78,29 @@ tap_action:
     code: "1234"
 ```
 
+## Custom Polling Interval (Advanced)
+
+Home Assistant strongly discourages configuring the integration's scanning frequency (poll interval) directly from the integration's UI to maintain stability and comply with architectural guidelines. The iAlarm integration uses a pre-calibrated default `SCAN_INTERVAL`.
+
+If you absolutely need to update the alarm status more frequently (or slower) than the default, you can do this safely using standard Home Assistant mechanisms:
+
+1. Go to **Settings** -> **Devices & Services** -> **iAlarm**.
+2. Click on the 3 dots (options) next to the integration and select **System Options**.
+3. Toggle off **Enable polling for updates** (this stops the default continuous polling).
+4. Create an **Automation** in Home Assistant that triggers exactly at your desired custom interval (e.g. `Time pattern` every 10 seconds).
+5. In the Action of this automation, call the service **`homeassistant.update_entity`** and pick your `alarm_control_panel.ialarm_panel` entity.
+
+```yaml
+alias: "iAlarm Custom Polling (10s)"
+trigger:
+  - platform: time_pattern
+    seconds: "/10"
+action:
+  - service: homeassistant.update_entity
+    target:
+      entity_id: alarm_control_panel.ialarm_panel
+```
+
 ## Automations
 
 ### Device Triggers (Recommended)

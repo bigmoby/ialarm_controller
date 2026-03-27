@@ -3,6 +3,7 @@
 from typing import TypedDict
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.helpers import config_validation as cv
 from pyasyncialarm.const import ZoneStatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
 import voluptuous as vol
@@ -30,10 +31,13 @@ IALARM_TO_HASS = {
     IAlarm.TRIGGERED: AlarmControlPanelState.TRIGGERED,
 }
 
+
 SERVICE_GET_LOG = "get_log"
 SERVICE_GET_LOG_MAX_ENTRIES = 25
 
-GET_LOG_ACTION_SCHEMA = vol.Schema({vol.Required("max_entries"): vol.Coerce(int)})
+GET_LOG_ACTION_SCHEMA = cv.make_entity_service_schema(
+    {vol.Required("max_entries"): vol.Coerce(int)}
+)
 
 ENTITY_SERVICES = {
     SERVICE_GET_LOG: GET_LOG_ACTION_SCHEMA,
