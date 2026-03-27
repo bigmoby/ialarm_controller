@@ -156,3 +156,6 @@ token.txt
 
 # Reports and logs
 bandit-report.json
+coverage.xml
+.coverage
+.coverage.*
