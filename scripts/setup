@@ -8,7 +8,13 @@ if [ ! -n "$VIRTUAL_ENV" ]; then
   if [ -x "$(command -v uv)" ]; then
     uv venv venv
   else
-    python -m venv venv
+    if [ -x "$(command -v python3.13)" ]; then
+      python3.13 -m venv venv
+    else
+      echo "ERROR: python3.13 non trovato. Questo progetto richiede Python >= 3.13." >&2
+      echo "Installa Python 3.13 e riesegui ./scripts/setup" >&2
+      exit 1
+    fi
   fi
   source venv/bin/activate
   python -m ensurepip --upgrade
@@ -18,6 +24,7 @@ if ! [ -x "$(command -v uv)" ]; then
   python -m pip install uv
 fi
 
-python -m pip install --requirement requirements.test.txt
+python -m pip install --requirement requirements.txt
+python -m pip install pytest pytest-cov pytest-mock coverage
 
 pre-commit install

@@ -1,5 +1,7 @@
-colorlog==6.9.0
-homeassistant==2024.12.3
-pip>=24.2,<24.4
-ruff==0.8.3
-pyasyncialarm==2.3.16
+colorlog>=6.9.0
+# Home Assistant Core (richiede Python >= 3.13)
+homeassistant>=2026.1.0
+pip>=24.2
+ruff>=0.8.3
+pyasyncialarm>=2.3.17
+pre-commit>=4.3.0

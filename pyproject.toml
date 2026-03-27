@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==75.6.0", "wheel~=0.45.0"]
+requires = ["setuptools>=75.6.0", "wheel>=0.45.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -18,10 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.13",
     "Topic :: IAlarm controller integration",
 ]
-requires-python = ">=3.11.0"
+requires-python = ">=3.13.0"
 
 [project.urls]
 "Homepage"    = "https://github.com/bigmoby/ialarm_controller"
@@ -33,8 +33,15 @@ platforms = ["any"]
 zip-safe  = false
 include-package-data = true
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["custom_components*"]
+
+[tool.setuptools.package-data]
+"custom_components.ialarm_controller" = ["*.json", "*.yaml", "*.png", "*.svg"]
+
 [tool.pylint.MAIN]
-py-version = "3.11"
+py-version = "3.13"
 ignore = [
     "tests",
 ]
@@ -599,7 +606,6 @@ select = [
     "S317", # suspicious-xml-sax-usage
     "S318", # suspicious-xml-mini-dom-usage
     "S319", # suspicious-xml-pull-dom-usage
-    "S320", # suspicious-xmle-tree-usage
     "S601", # paramiko-call
     "S602", # subprocess-popen-with-shell-equals-true
     "S604", # call-with-shell-equals-true
@@ -691,7 +697,7 @@ max-complexity = 25
 # mypy global options:
 
 [tool.mypy]
-python_version = 3.12
+python_version = 3.13
 plugins = "pydantic.mypy"
 pretty = true
 show_error_codes = true
