@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pyasyncialarm.const import StatusType
 
+from custom_components.ialarm_controller.const import DOMAIN, IAlarmStatusType
 from custom_components.ialarm_controller.entity import IAlarmEntity
 
 from . import IAlarmConfigEntry
@@ -31,7 +32,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up iAlarm Zone Status sensors."""
     ialarm_coordinator = config_entry.runtime_data
-    unique_id = config_entry.unique_id
+    if not (unique_id := config_entry.unique_id):
+        return
     async_add_entities(
         [IAlarmSensorEntity(ialarm_coordinator, unique_id, config_entry.title)], True
     )
@@ -55,8 +57,8 @@ class IAlarmSensorEntity(IAlarmEntity, SensorEntity):
 
     def _get_sensor_data_attributes(self) -> dict[str, str]:
         """Get iAlarm status data."""
-        domain = self.coordinator.config_entry.domain
-        ialarm_status_data = self.coordinator.data
+        domain = DOMAIN
+        ialarm_status_data: IAlarmStatusType | None = self.coordinator.data
 
         result: dict[str, str] = {}
         result["Integration"] = domain

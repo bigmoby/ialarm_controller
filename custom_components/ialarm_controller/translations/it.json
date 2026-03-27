@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo è già configurato"
+        },
+        "error": {
+            "cannot_connect": "Connessione fallita",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Indirizzo (IP o Hostname)",
+                    "port": "Porta",
+                    "event": "Invia eventi iAlarm sul bus di Home Assistant"
+                },
+                "data_description": {
+                    "host": "L'indirizzo IP o l'hostname della centrale Antifurto365 iAlarm.",
+                    "port": "La porta IP della centrale Antifurto365 iAlarm.",
+                    "event": "Seleziona se la centrale deve inviare messaggi di evento nel log di Home Assistant."
+                }
+            }
+        }
+    },
+    "services": {
+        "get_log": {
+            "description": "Recupera le ultime N voci del log della centrale.",
+            "fields": {
+                "max_entries": {
+                    "description": "Specifica il numero massimo di voci da recuperare.",
+                    "name": "Voci massime"
+                }
+            },
+            "name": "Recupera log iAlarm"
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "disarmed": "Sistema disarmato",
+            "armed_home": "Sistema armato parziale",
+            "armed_away": "Sistema armato totale",
+            "triggered": "Allarme attivato"
+        }
+    }
+}

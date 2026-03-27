@@ -19,7 +19,7 @@ script:
     sequence:
       - service: alarm_control_panel.alarm_disarm
         target:
-          entity_id: alarm_control_panel.ialarm_panel
+          entity_id: alarm_control_panel.ialarm_panel_ialarm_panel
         data:
           code: "1234"
   test_arm:
@@ -27,7 +27,7 @@ script:
     sequence:
       - service: alarm_control_panel.alarm_arm_away
         target:
-          entity_id: alarm_control_panel.ialarm_panel
+          entity_id: alarm_control_panel.ialarm_panel_ialarm_panel
         data:
           code: "1234"
 

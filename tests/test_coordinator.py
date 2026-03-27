@@ -113,4 +113,4 @@ async def test_coordinator_get_log(
 
     ialarm_api.return_value.get_last_log_entries = AsyncMock(return_value=[])
     response_empty = await coordinator.async_get_log()
-    assert response_empty == []
+    assert response_empty == {"items": []}

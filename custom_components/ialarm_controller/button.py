@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -26,7 +27,7 @@ class IAlarmButtonDescription(ButtonEntityDescription):
 
     """
 
-    press_action: Callable[[IAlarmCoordinator], Awaitable[None]]
+    press_action: Callable[[IAlarmCoordinator], Awaitable[Any]]
 
 
 BUTTONS: tuple[IAlarmButtonDescription, ...] = (

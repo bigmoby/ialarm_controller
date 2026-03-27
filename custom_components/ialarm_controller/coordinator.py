@@ -66,9 +66,10 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
                         "name": item["name"],
                     }
                     for item in items
+                    if item is not None
                 ],
             }
-        return []
+        return {"items": []}
 
     async def _async_update_data(self) -> IAlarmStatusType:
         """Fetch data from iAlarm."""
@@ -84,7 +85,11 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
                 internal_alarm_status["status_value"]
             )
 
-            _LOGGER.debug("iAlarm status [%s]", alarm_status_value)
+            _LOGGER.debug(
+                "iAlarm raw status [%s], mapped to [%s]",
+                internal_alarm_status["status_value"],
+                alarm_status_value,
+            )
 
             if (
                 alarm_status_value == AlarmControlPanelState.TRIGGERED

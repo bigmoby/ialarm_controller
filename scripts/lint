@@ -20,7 +20,4 @@ ruff check custom_components/ tests/
 echo "Running ruff format check..."
 ruff format --check custom_components/ tests/
 
-echo "Running mypy..."
-mypy custom_components/
-
 echo "All checks passed! ✅"

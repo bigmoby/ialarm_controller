@@ -239,6 +239,7 @@ async def test_alarm_control_panel_state_property_none(
 
     coordinator = mock_config_entry.runtime_data
     coordinator.state = None
+    coordinator.data = None
     panel = IAlarmPanel(
         coordinator, mock_config_entry.unique_id, mock_config_entry.title
     )

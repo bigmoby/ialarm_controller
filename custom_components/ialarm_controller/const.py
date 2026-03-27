@@ -28,7 +28,7 @@ IALARM_TO_HASS = {
 SERVICE_GET_LOG = "get_log"
 SERVICE_GET_LOG_MAX_ENTRIES = 25
 
-GET_LOG_ACTION_SCHEMA = {vol.Required("max_entries"): vol.Coerce(int)}
+GET_LOG_ACTION_SCHEMA = vol.Schema({vol.Required("max_entries"): vol.Coerce(int)})
 
 ENTITY_SERVICES = {
     SERVICE_GET_LOG: GET_LOG_ACTION_SCHEMA,

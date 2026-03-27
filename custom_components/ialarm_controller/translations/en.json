@@ -33,5 +33,13 @@
             },
             "name": "IAlarm log."
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "disarmed": "Alarm system disarmed",
+            "armed_home": "Alarm system armed home",
+            "armed_away": "Alarm system armed away",
+            "triggered": "Alarm system triggered"
+        }
     }
 }
