@@ -153,3 +153,9 @@ config/secrets.yaml
 !config/configuration.yaml
 token.txt
 .DS_Store
+
+# Reports and logs
+bandit-report.json
+coverage.xml
+.coverage
+.coverage.*

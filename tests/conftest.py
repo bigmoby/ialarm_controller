@@ -1,6 +1,6 @@
 """Global fixtures for ialarm_controller integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 from custom_components.ialarm_controller.const import DOMAIN
@@ -23,7 +23,14 @@ def enable_custom_integrations(hass: HomeAssistant) -> None:  # noqa: PT004
 @pytest.fixture(name="ialarm_api")
 def ialarm_api_fixture():
     """Set up IAlarm API fixture."""
-    with patch("pyasyncialarm.pyasyncialarm.IAlarm") as mock_ialarm_api:
+    with patch("custom_components.ialarm_controller.IAlarm") as mock_ialarm_api:
+        mock_instance = mock_ialarm_api.return_value
+        mock_instance.get_mac = AsyncMock(return_value="00:11:22:33:44:55")
+        mock_instance.get_zone_status = AsyncMock(return_value=[])
+        mock_instance.get_status = AsyncMock(
+            return_value={"status_value": 0, "alarmed_zones": []}
+        )
+        mock_instance.get_last_log_entries = AsyncMock(return_value=[])
         yield mock_ialarm_api
 
 

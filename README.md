@@ -45,17 +45,60 @@ In Home Assistant->Settings->Device & services->Integration menu add the new int
 
 ![UI_SCREENSHOT4](Capture4.png)
 
-## Events
+## UI Configuration
 
-With this iAlarm integration will be available these Home Assistant Events: `ialarm_disarm`, `ialarm_arm_stay`, `ialarm_arm_away`, `ialarm_triggered`, `cancel_alarm`, `ialarm_logs`.
+The iAlarm integration requires a code for both arming and disarming actions to ensure intentionality and security.
+
+### Standard Alarm Panel Card
+
+The easiest way to interact with your alarm is by using the standard `alarm-panel` card. Because the integration enforces a code requirement, the keypad will automatically appear.
+
+```yaml
+type: alarm-panel
+entity: alarm_control_panel.ialarm_panel
+states:
+  - arm_home
+  - arm_away
+```
+
+### Custom Button (Quick Arm)
+
+If you want to create a button that arms the system with a specific code without typing it every time, you can use a manual service call:
+
+```yaml
+type: button
+name: Quick Arm Away
+icon: mdi:shield-lock
+tap_action:
+  action: call-service
+  service: alarm_control_panel.alarm_arm_away
+  target:
+    entity_id: alarm_control_panel.ialarm_panel
+  data:
+    code: "1234"
+```
 
 ## Automations
 
-### Trigger a Notification When iAlarm is Triggered
+### Device Triggers (Recommended)
 
-This automation allows you to send a notification if the iAlarm system is in a triggered state:
+The easiest way to automate your home based on the alarm state is through the Home Assistant UI.
+Go to **Settings** -> **Automations** -> **Create Automation** -> **Add Trigger**.
+Select the **iAlarm** device and you will see the following native triggers:
+- **Alarm system disarmed**
+- **Alarm system armed home** (stay)
+- **Alarm system armed away**
+- **Alarm system triggered**
 
-```
+### Event Triggers
+
+The integration also fires legacy events for advanced usage: `ialarm_disarm`, `ialarm_arm_stay`, `ialarm_arm_away`, `ialarm_triggered`, `cancel_alarm`, `ialarm_logs`.
+
+#### Example: Trigger a Notification When iAlarm is Triggered
+
+This automation uses the `ialarm_triggered` event to send a notification with the zone name:
+
+```yaml
 alias: Alarm Zone Notification
 description: "Sends a notification when a zone in iAlarm is triggered."
 triggers:
@@ -70,7 +113,6 @@ actions:
       title: "Alarm Triggered"
       message: "Attention: The zone [{{ triggered_zone }}] is in alarm!"
 mode: single
-
 ```
 
 ## Services

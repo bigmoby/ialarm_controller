@@ -6,6 +6,7 @@ from custom_components.ialarm_controller.const import DOMAIN
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .const import TEST_DATA, TEST_MAC
 
@@ -24,7 +25,7 @@ async def test_successful_config_flow(hass: HomeAssistant):
 
     with (
         patch(
-            "custom_components.ialarm_controller.config_flow._get_device_mac",
+            "custom_components.ialarm_controller.config_flow.IAlarm.get_mac",
             return_value=TEST_MAC,
         ),
         patch(
@@ -50,7 +51,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "custom_components.ialarm_controller.config_flow._get_device_mac",
+        "custom_components.ialarm_controller.config_flow.IAlarm.get_mac",
         side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -68,7 +69,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "custom_components.ialarm_controller.config_flow._get_device_mac",
+        "custom_components.ialarm_controller.config_flow.IAlarm.get_mac",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -77,3 +78,29 @@ async def test_form_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test we handle already configured error."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_MAC,
+        data=TEST_DATA,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "custom_components.ialarm_controller.config_flow.IAlarm.get_mac",
+        return_value=TEST_MAC,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

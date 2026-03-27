@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Auto-activate virtual environment if it exists
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+fi
+echo "Running tests with coverage..."
+pytest tests/ \
+    --verbose
+
+echo "Generating coverage report..."
+coverage html
+coverage xml
+
+echo "Tests completed! ✅"
+echo "Coverage report available at: htmlcov/index.html"

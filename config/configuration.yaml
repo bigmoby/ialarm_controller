@@ -1,6 +1,36 @@
 # https://www.home-assistant.io/integrations/default_config/
 default_config:
 
+lovelace:
+  resource_mode: yaml
+  dashboards:
+    lovelace:
+      mode: yaml
+      filename: ui-lovelace.yaml
+      title: iAlarm Test
+      icon: mdi:shield-home
+      show_in_sidebar: true
+
+automation: !include automations.yaml
+
+script:
+  test_disarm:
+    alias: "Test Disarm (1234)"
+    sequence:
+      - service: alarm_control_panel.alarm_disarm
+        target:
+          entity_id: alarm_control_panel.ialarm_panel_ialarm_panel
+        data:
+          code: "1234"
+  test_arm:
+    alias: "Test Arm Away (1234)"
+    sequence:
+      - service: alarm_control_panel.alarm_arm_away
+        target:
+          entity_id: alarm_control_panel.ialarm_panel_ialarm_panel
+        data:
+          code: "1234"
+
 logger:
   default: info
   logs:

@@ -12,12 +12,28 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus."
+                    "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus.",
+                    "require_code_to_arm": "Require code to arm",
+                    "require_code_to_disarm": "Require code to disarm"
                 },
                 "data_description": {
                     "host": "The hostname or IP address of Antifurto365 iAlarm system.",
                     "port": "The IP port of Antifurto365 iAlarm system.",
-                    "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus."
+                    "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus.",
+                    "require_code_to_arm": "Require a PIN code to arm the alarm system.",
+                    "require_code_to_disarm": "Require a PIN code to disarm the alarm system."
+                }
+            },
+            "init": {
+                "data": {
+                    "event": "Send events to HA bus",
+                    "require_code_to_arm": "Require code to arm",
+                    "require_code_to_disarm": "Require code to disarm"
+                },
+                "data_description": {
+                    "event": "Check if the Antifurto365 iAlarm system should send events through the HA bus.",
+                    "require_code_to_arm": "Require a PIN code to arm the alarm system.",
+                    "require_code_to_disarm": "Require a PIN code to disarm the alarm system."
                 }
             }
         }
@@ -32,6 +48,14 @@
                 }
             },
             "name": "IAlarm log."
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "disarmed": "Alarm system disarmed",
+            "armed_home": "Alarm system armed home",
+            "armed_away": "Alarm system armed away",
+            "triggered": "Alarm system triggered"
         }
     }
 }

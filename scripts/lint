@@ -4,8 +4,20 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-ruff \
-  format \
-  custom_components tests
+# Auto-activate virtual environment if it exists
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+fi
+echo "Running pre-commit hooks..."
+pre-commit run --all-files
 
-ruff check . --fix
+echo "Running pytest..."
+pytest tests/ --cov=custom_components --cov-report=term-missing
+
+echo "Running ruff check..."
+ruff check custom_components/ tests/
+
+echo "Running ruff format check..."
+ruff format --check custom_components/ tests/
+
+echo "All checks passed! ✅"
