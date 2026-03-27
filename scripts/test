@@ -4,6 +4,10 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Auto-activate virtual environment if it exists
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+fi
 echo "Running tests with coverage..."
 pytest tests/ \
     --cov=custom_components \

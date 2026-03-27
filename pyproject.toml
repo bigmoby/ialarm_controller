@@ -18,10 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: IAlarm controller integration",
 ]
-requires-python = ">=3.13.0"
+requires-python = ">=3.14.2"
 
 [project.urls]
 "Homepage"    = "https://github.com/bigmoby/ialarm_controller"
@@ -41,7 +41,7 @@ include = ["custom_components*"]
 "custom_components.ialarm_controller" = ["*.json", "*.yaml", "*.png", "*.svg"]
 
 [tool.pylint.MAIN]
-py-version = "3.13"
+py-version = "3.14"
 ignore = [
     "tests",
 ]
@@ -382,6 +382,25 @@ max-line-length-suggestions = 72
 testpaths = [
     "tests",
 ]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+    "--cov=custom_components",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
 norecursedirs = [
     ".git",
     "testing_config",
@@ -697,7 +716,7 @@ max-complexity = 25
 # mypy global options:
 
 [tool.mypy]
-python_version = 3.13
+python_version = 3.14
 plugins = "pydantic.mypy"
 pretty = true
 show_error_codes = true
@@ -734,3 +753,30 @@ disallow_untyped_defs = false
 warn_return_any = false
 warn_unreachable = false
 no_implicit_reexport = false
+
+[tool.coverage.run]
+source = ["custom_components"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"

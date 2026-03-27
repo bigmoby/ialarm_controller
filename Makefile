@@ -20,7 +20,7 @@ build: ## Build the package
 	./scripts/build
 
 clean: ## Clean build artifacts
-	rm -rf dist/ build/ *.egg-info/ htmlcov/ .coverage coverage.xml
+	rm -rf dist/ build/ *.egg-info/ htmlcov/ .coverage coverage.xml venv/
 
 dev: ## Start development environment
 	./scripts/develop

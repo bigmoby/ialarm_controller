@@ -8,11 +8,11 @@ if [ ! -n "$VIRTUAL_ENV" ]; then
   if [ -x "$(command -v uv)" ]; then
     uv venv venv
   else
-    if [ -x "$(command -v python3.13)" ]; then
-      python3.13 -m venv venv
+    if [ -x "$(command -v python3.14)" ]; then
+      python3.14 -m venv venv
     else
-      echo "ERROR: python3.13 non trovato. Questo progetto richiede Python >= 3.13." >&2
-      echo "Installa Python 3.13 e riesegui ./scripts/setup" >&2
+      echo "ERROR: python3.14 non trovato. Questo progetto richiede Python >= 3.14.2." >&2
+      echo "Installa Python 3.14 e riesegui ./scripts/setup" >&2
       exit 1
     fi
   fi
@@ -24,7 +24,7 @@ if ! [ -x "$(command -v uv)" ]; then
   python -m pip install uv
 fi
 
-python -m pip install --requirement requirements.txt
-python -m pip install pytest pytest-cov pytest-mock coverage
+python -m pip --disable-pip-version-check install -r requirements.txt
+python -m pip --disable-pip-version-check install -r requirements.test.txt
 
 pre-commit install
