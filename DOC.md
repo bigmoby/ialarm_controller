@@ -5,97 +5,248 @@ The purpose of this document is to outline the best practices to follow in order
 
 ---
 
-## 1. Development Environment Setup
+## 1. Prerequisites
+
+Before starting, make sure you have the following tools installed on your system:
+
+- **Python 3.14.2** — the project strictly requires this version. Use [`pyenv`](https://github.com/pyenv/pyenv) to manage it:
+  ```bash
+  pyenv install 3.14.2
+  pyenv local 3.14.2
+  ```
+- **Git** — for version control and branch management.
+- **Make** — to run the automated workflow commands.
+
+---
+
+## 2. Development Environment Setup
 
 Before writing any lines of code, make sure you have configured your isolated development environment.
 
-1. **Use a Virtual Environment**
-   Installing dependencies globally is highly discouraged. Always use a virtual environment (`venv`).
-2. **Install Dependencies**
-   The project automates this setup phase via the `Makefile`. To prepare everything you need, simply run:
+1. **Clone the repository** (if not already done):
    ```bash
-   make install
+   git clone https://github.com/bigmoby/ialarm_controller.git
+   cd ialarm_controller
    ```
-   *(This will automatically execute the `./scripts/setup` script to install requirements, testing packages, and pre-commit hooks).*
 
----
-
-## 2. Using "pre-commit" for Code Quality
-
-One of the fundamental aspects of this repository is the use of **pre-commit hooks**.
-These scripts automatically check your modified files every time you attempt to run `git commit`. They verify syntax (JSON, TOML), trim trailing whitespaces, and standardize end-of-file formats.
-
-*   Ensure that you **never bypass** these checks.
-*   If a check fails (e.g., `end-of-file-fixer`), the pre-commit hook will automatically modify the files to fix them. All you need to do is stage the fixed files again using `git add <file>` and retry `git commit`.
-*   You can manually run checks on the entire codebase with:
-    ```bash
-    make pre-commit
-    ```
-
----
-
-## 3. Linting and Formatting
-
-The code is formatted and cross-checked using a combination of tools (`ruff`, `pylint`, `mypy`).
-Before committing, ensure that your new code adheres to the guidelines:
-
-*   **To automatically format your code:**
-    ```bash
-    make format
-    ```
-*   **To run the linting tools (static analysis):**
-    ```bash
-    make lint
-    ```
-    Resolve any warnings or errors returned by the linter before proceeding.
-
----
-
-## 4. Local Testing (The Most Critical Step)
-
-Adding new features or fixing bugs carries the risk of introducing regressions in pre-existing parts of the codebase. **It is absolutely prohibited to open a Pull Request without having tested your changes first.**
-
-In particular, the project relies on `pytest` and requires that the code coverage remains high (above 80%).
-
-1. **Write the Tests**
-   Always include corresponding tests for the logic you are modifying or adding under the `tests/` directory.
-2. **Run the local test suite**
-   Run the tests using the official Makefile command:
-   ```bash
-   make test
-   ```
-   *Alternatively, you can run the `./scripts/test` script.*
-3. **Check Code Coverage**
-   Verify the terminal output. If the command returns errors, you are not ready for a Pull Request. If the code coverage drops below the threshold set in `pyproject.toml`, expand your tests to cover the missing cases.
-
----
-
-## 5. Recommended Contribution Workflow (PR Lifecycle)
-
-When you decide to implement a new feature (Feature) or a Fix, always follow this methodical flow:
-
-1. **Always keep your local `main` branch updated**:
-   Ensure you have the latest code version by pulling the recent commits (`git pull origin main`).
-2. **Create an isolated Branch**:
-   Use descriptive naming conventions. Example: `feature/add-climate` or `fix/connection-error`.
+2. **Work on a dedicated branch** (never commit directly to `main`):
    ```bash
    git checkout -b feature/your-feature-name
    ```
-3. **Write Code and Tests**:
-   Implement the logic and do not forget to add or update files inside the `tests/` directory!
-4. **Verify Your Work**:
-   Re-run the entire pipeline locally to ensure it will pass CI checks:
+
+3. **Install all dependencies** — the project automates this via the `Makefile`:
+   ```bash
+   make install
+   ```
+   This will execute `./scripts/setup`, which:
+   - Creates a Python virtual environment in `venv/` using `python3.14`
+   - Installs `uv` as a fast pip replacement if not already present
+   - Installs all dependencies from `requirements.txt` and `requirements.test.txt`
+   - Installs the `pre-commit` hooks automatically
+
+> **Note:** The `venv/` is activated automatically by all `make` commands (`test`, `lint`, `build`, `dev`). You do not need to activate it manually.
+
+---
+
+## 3. Available Make Commands
+
+Run `make help` to see all available commands:
+
+| Command            | Description                                                 |
+|--------------------|-------------------------------------------------------------|
+| `make install`     | Create venv and install all dependencies                    |
+| `make test`        | Run the full test suite with coverage                       |
+| `make lint`        | Run all linting checks (ruff, pylint, mypy)                 |
+| `make format`      | Auto-format code with `ruff`                                |
+| `make dev`         | Start a local Home Assistant instance for manual testing    |
+| `make build`       | Build the distributable package                             |
+| `make pre-commit`  | Run all pre-commit hooks on the full codebase               |
+| `make update-deps` | Upgrade dependencies and pre-commit hooks                   |
+| `make clean`       | Remove build artifacts, htmlcov, and the venv               |
+
+---
+
+## 4. Local Testing with Unit Tests
+
+The project uses `pytest` with a strict **96% code coverage threshold** configured in `pyproject.toml`.
+
+### Run the test suite
+
+```bash
+make test
+```
+
+This executes `./scripts/test`, which runs `pytest` against the `tests/` directory and generates:
+- A terminal coverage summary
+- An HTML report at `htmlcov/index.html`
+- An XML report at `coverage.xml`
+
+### Test structure
+
+| File                                  | What it tests                                           |
+|---------------------------------------|---------------------------------------------------------|
+| `tests/test_config_flow.py`           | Configuration UI flow (success, connection errors)      |
+| `tests/test_init.py`                  | Component setup, teardown, and `ConfigEntryNotReady`    |
+| `tests/test_coordinator.py`           | Data polling, event bus firing, cancel alarm, get log   |
+| `tests/test_alarm_control_panel.py`   | Arm away, arm home, disarm (with and without code)      |
+| `tests/test_sensor.py`                | Zone status parsing and sensor state transitions        |
+| `tests/test_button.py`                | Button press actions (cancel alarm, fetch log)          |
+
+### Writing new tests
+
+- All tests are **async** and use the `pytest-homeassistant-custom-component` framework.
+- The `ialarm_api` fixture in `tests/conftest.py` automatically mocks the `IAlarm` class so no physical hardware is required.
+- Override individual mock methods in each test as needed:
+  ```python
+  ialarm_api.return_value.get_mac = AsyncMock(return_value="00:11:22:33:44:55")
+  ialarm_api.return_value.get_zone_status = AsyncMock(return_value=[...])
+  ```
+
+> **Rule:** Never open a PR if `make test` fails or if coverage drops below 96%.
+
+---
+
+## 5. Manual Testing with a Local Home Assistant Instance
+
+To test the integration end-to-end against a real (or simulated) iAlarm device:
+
+```bash
+make dev
+```
+
+This executes `./scripts/develop`, which:
+1. Activates the `venv` automatically.
+2. Creates a `config/` directory in the project root (if it does not exist) and initializes it with `hass --script ensure_config`.
+3. Sets `PYTHONPATH` so that Home Assistant finds `custom_components/ialarm_controller` directly, **without symlinks**.
+4. Clears any stale `__pycache__` directories.
+5. Starts Home Assistant in `--debug` mode pointing to the local `config/` directory.
+
+Then open your browser at **http://localhost:8123** and configure the iAlarm integration through the Home Assistant UI.
+
+> **Note:** The `config/` directory is local only and should be listed in `.gitignore`. It contains your local HA configuration and credentials — never commit it.
+
+---
+
+## 6. Linting and Formatting
+
+Before committing, ensure your code adheres to the project style:
+
+```bash
+make format   # auto-fix formatting with ruff
+make lint     # run static analysis (ruff, pylint, mypy, bandit)
+```
+
+Resolve all warnings before proceeding. The CI pipeline will fail on any linting error.
+
+---
+
+## 7. pre-commit Hooks
+
+Every `git commit` automatically runs the pre-commit hooks, which verify:
+- Syntax validity (JSON, TOML, YAML)
+- Trailing whitespace / end-of-file consistency
+- Code style (ruff)
+
+If a hook fails but auto-fixes the file, simply re-stage and re-commit:
+
+```bash
+git add <fixed-file>
+git commit -m "your message"
+```
+
+You can also run hooks manually on the whole codebase at any time:
+
+```bash
+make pre-commit
+```
+
+---
+
+## 8. Reviewing and Testing a Pull Request Locally
+
+Before merging any external PR, always test it locally first.
+
+> **Important:** Before checking out a PR branch, commit or stash your current work to avoid losing uncommitted changes.
+
+```bash
+# 1. Save your current work first!
+git add . && git commit -m "WIP: save before testing PR"
+
+# 2. Fetch the PR branch by number (works for any fork automatically)
+git fetch origin pull/<PR_NUMBER>/head:pr-<PR_NUMBER>
+git checkout pr-<PR_NUMBER>
+
+# 3. Reinstall in case dependencies changed
+make install
+
+# 4. Run the full validation pipeline
+make test
+make lint
+
+# 5. Start HA locally to test manually
+make dev
+```
+
+To go back to your branch:
+
+```bash
+git checkout feature/your-branch-name
+
+# Optionally delete the PR branch
+git branch -D pr-<PR_NUMBER>
+```
+
+---
+
+## 9. Recommended Contribution Workflow (PR Lifecycle)
+
+Follow this flow for every feature or bugfix:
+
+1. **Keep `main` up to date:**
+   ```bash
+   git pull origin main
+   ```
+2. **Create an isolated branch** with a descriptive name:
+   ```bash
+   git checkout -b feature/add-climate
+   # or
+   git checkout -b fix/connection-error
+   ```
+3. **Write code and tests** — always add or update files inside `tests/`.
+4. **Run the full pipeline locally:**
    ```bash
    make format
    make lint
    make test
    ```
-5. **Stage and Commit**:
-   Stage *only* the files that are strictly necessary for the feature (avoid including junk files, generated reports like `bandit-report.json`, or `.DS_Store`).
+5. **Stage only relevant files and commit:**
    ```bash
-   git add modified_file.py
-   git commit -m "feat: clear explanation of what this commit introduces"
+   git add modified_file.py tests/test_modified_file.py
+   git commit -m "feat: short description of what this commit introduces"
    ```
-   *Let the pre-commit hooks do their job.*
-6. **Push and Pull Request**:
-   Push your isolated branch and open the PR on GitHub, specifying in the PR body which issue it solves and clearly stating: "Successfully tested locally".
+   *Let the pre-commit hooks run and fix any issues automatically.*
+6. **Push and open a Pull Request** on GitHub. In the PR body, specify:
+   - Which issue it resolves (e.g., `Closes #42`)
+   - That it has been tested locally: *"Successfully tested locally with `make test` and `make dev`"*
+
+---
+
+## 10. Dependency Management
+
+| File                    | Purpose                                                             |
+|-------------------------|---------------------------------------------------------------------|
+| `requirements.txt`      | Runtime dependencies (HA core, pyasyncialarm, ruff, pre-commit)    |
+| `requirements.test.txt` | Test-only dependencies (pytest-homeassistant-custom-component, syrupy) |
+
+To upgrade all dependencies and pre-commit hooks:
+
+```bash
+make update-deps
+```
+
+To do a clean reinstall from scratch:
+
+```bash
+make clean
+make install
+```
