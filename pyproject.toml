@@ -9,7 +9,7 @@ license     = {text = "MIT License"}
 description = "IAlarm controller integration"
 readme      = "README.md"
 authors     = [
-    {name = "Fabio Bigmoby Mauro", email = ""}
+    {name = "Fabio Bigmoby Mauro"}
 ]
 keywords    = ["home", "automation"]
 classifiers = [
