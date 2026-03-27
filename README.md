@@ -108,6 +108,7 @@ action:
 The easiest way to automate your home based on the alarm state is through the Home Assistant UI.
 Go to **Settings** -> **Automations** -> **Create Automation** -> **Add Trigger**.
 Select the **iAlarm** device and you will see the following native triggers:
+
 - **Alarm system disarmed**
 - **Alarm system armed home** (stay)
 - **Alarm system armed away**
@@ -181,6 +182,30 @@ pytest tests/test_config_flow.py
 -
 
 ##
+
+## Contributing
+
+This is an active open-source project. We are always open to people who want to
+use the code or contribute to it.
+
+We have set up a separate document containing our
+[contribution guidelines](CONTRIBUTING.md).
+
+Thank you for being involved! :heart_eyes:
+
+## Sponsor
+
+Please, if You want support this kind of projects:
+
+<a href="https://www.buymeacoffee.com/bigmoby" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
+Many Thanks,
+
+Fabio Mauro
+
+## Authors & contributors
+
+Fabio Mauro Bigmoby
 
 \*\* "IAlarm" is a trademark of Antifurto365.
 
