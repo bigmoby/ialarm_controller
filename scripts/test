@@ -10,11 +10,6 @@ if [ -f "venv/bin/activate" ]; then
 fi
 echo "Running tests with coverage..."
 pytest tests/ \
-    --cov=custom_components \
-    --cov-report=term-missing \
-    --cov-report=html \
-    --cov-report=xml \
-    --cov-fail-under=80 \
     --verbose
 
 echo "Generating coverage report..."
