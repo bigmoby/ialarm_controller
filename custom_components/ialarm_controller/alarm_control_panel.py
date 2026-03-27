@@ -99,6 +99,16 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
+        # Require a code to be passed for arm operations
+        if code is None or code == "":
+            _LOGGER.error("Failed to arm home the alarm system. Please enter the code.")
+            persistent_notification.create(
+                self.hass,
+                "Failed to arm home the alarm system.<br/>Please enter the code.",
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID,
+            )
+            return
         await self.coordinator.ialarm_device.arm_stay()
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_arm_stay was triggered")
@@ -108,6 +118,16 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
+        # Require a code to be passed for arm operations
+        if code is None or code == "":
+            _LOGGER.error("Failed to arm away the alarm system. Please enter the code.")
+            persistent_notification.create(
+                self.hass,
+                "Failed to arm away the alarm system.<br/>Please enter the code.",
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID,
+            )
+            return
         await self.coordinator.ialarm_device.arm_away()
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_arm_away was triggered")

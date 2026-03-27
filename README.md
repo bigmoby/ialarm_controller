@@ -45,6 +45,39 @@ In Home Assistant->Settings->Device & services->Integration menu add the new int
 
 ![UI_SCREENSHOT4](Capture4.png)
 
+## UI Configuration
+
+The iAlarm integration requires a code for both arming and disarming actions to ensure intentionality and security.
+
+### Standard Alarm Panel Card
+
+The easiest way to interact with your alarm is by using the standard `alarm-panel` card. Because the integration enforces a code requirement, the keypad will automatically appear.
+
+```yaml
+type: alarm-panel
+entity: alarm_control_panel.ialarm_panel
+states:
+  - arm_home
+  - arm_away
+```
+
+### Custom Button (Quick Arm)
+
+If you want to create a button that arms the system with a specific code without typing it every time, you can use a manual service call:
+
+```yaml
+type: button
+name: Quick Arm Away
+icon: mdi:shield-lock
+tap_action:
+  action: call-service
+  service: alarm_control_panel.alarm_arm_away
+  target:
+    entity_id: alarm_control_panel.ialarm_panel
+  data:
+    code: "1234"
+```
+
 ## Events
 
 With this iAlarm integration will be available these Home Assistant Events: `ialarm_disarm`, `ialarm_arm_stay`, `ialarm_arm_away`, `ialarm_triggered`, `cancel_alarm`, `ialarm_logs`.
