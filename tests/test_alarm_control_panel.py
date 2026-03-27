@@ -38,7 +38,7 @@ async def test_alarm_control_panel_actions(
     await hass.services.async_call(
         ALARM_DOMAIN,
         SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: entity_id, "code": "1234"},
         blocking=True,
     )
     ialarm_api.return_value.arm_away.assert_awaited_once()
@@ -48,12 +48,12 @@ async def test_alarm_control_panel_actions(
     await hass.services.async_call(
         ALARM_DOMAIN,
         SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: entity_id, "code": "1234"},
         blocking=True,
     )
     ialarm_api.return_value.arm_stay.assert_awaited_once()
 
-    # Test disarm without code (None) — should now succeed
+    # Test disarm without code (None) — should fail (not call API)
     ialarm_api.return_value.disarm = AsyncMock()
     ialarm_api.return_value.cancel_alarm = AsyncMock()
     await hass.services.async_call(
@@ -62,24 +62,18 @@ async def test_alarm_control_panel_actions(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    ialarm_api.return_value.disarm.assert_awaited_once()
-    ialarm_api.return_value.cancel_alarm.assert_awaited_once()
+    ialarm_api.return_value.disarm.assert_not_called()
 
-    # Test disarm with empty code — should also succeed
-    ialarm_api.return_value.disarm.reset_mock()
-    ialarm_api.return_value.cancel_alarm.reset_mock()
+    # Test disarm with empty code — should fail
     await hass.services.async_call(
         ALARM_DOMAIN,
         SERVICE_ALARM_DISARM,
         {ATTR_ENTITY_ID: entity_id, "code": ""},
         blocking=True,
     )
-    ialarm_api.return_value.disarm.assert_awaited_once()
-    ialarm_api.return_value.cancel_alarm.assert_awaited_once()
+    ialarm_api.return_value.disarm.assert_not_called()
 
-    # Test disarm with code — should also succeed
-    ialarm_api.return_value.disarm.reset_mock()
-    ialarm_api.return_value.cancel_alarm.reset_mock()
+    # Test disarm with code — should succeed
     await hass.services.async_call(
         ALARM_DOMAIN,
         SERVICE_ALARM_DISARM,
