@@ -159,3 +159,4 @@ bandit-report.json
 coverage.xml
 .coverage
 .coverage.*
+.claude
