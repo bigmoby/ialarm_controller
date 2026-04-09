@@ -17,7 +17,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from pyasyncialarm.pyasyncialarm import IAlarm
 
-from .const import DEFAULT_SEND_EVENTS, DOMAIN
+from .const import DEFAULT_SEND_EVENTS
 from .coordinator import IAlarmCoordinator
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.SENSOR, Platform.BUTTON]
@@ -44,21 +44,19 @@ async def async_setup_entry(
     except (TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
-    ialarmCoordinator = IAlarmCoordinator(hass, ialarm_device, mac, send_events)
+    coordinator = IAlarmCoordinator(hass, ialarm_device, mac, send_events)
 
-    async def _async_on_hass_stop(_: Event) -> None:
-        """Close connection when hass stops."""
-        await ialarmCoordinator.async_shutdown()
+    await coordinator.async_config_entry_first_refresh()
+
+    config_entry.runtime_data = coordinator
+
+    async def _async_close_connection(event: Event) -> None:
+        """Close connection on HA Stop."""
+        await coordinator.async_shutdown()
 
     config_entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_connection)
     )
-
-    await ialarmCoordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})
-
-    config_entry.runtime_data = ialarmCoordinator
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 

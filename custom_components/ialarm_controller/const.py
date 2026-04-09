@@ -28,6 +28,7 @@ IALARM_TO_HASS = {
     IAlarm.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
     IAlarm.ARMED_STAY: AlarmControlPanelState.ARMED_HOME,
     IAlarm.DISARMED: AlarmControlPanelState.DISARMED,
+    IAlarm.CANCEL: AlarmControlPanelState.DISARMED,
     IAlarm.TRIGGERED: AlarmControlPanelState.TRIGGERED,
 }
 

@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.alarm_control_panel import (
-    SCAN_INTERVAL,
-    AlarmControlPanelState,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pyasyncialarm.const import AlarmStatusType, LogEntryType, ZoneStatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
@@ -22,7 +20,11 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
     """Class to manage fetching iAlarm data."""
 
     def __init__(
-        self, hass: HomeAssistant, device: IAlarm, mac: str, send_events: bool
+        self,
+        hass: HomeAssistant,
+        device: IAlarm,
+        mac: str,
+        send_events: bool,
     ) -> None:
         """Initialize global iAlarm data updater."""
         self.ialarm_device = device
@@ -35,8 +37,13 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
+
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator and close the alarm device connection."""
+        await self.ialarm_device.shutdown()
+        await super().async_shutdown()
 
     async def async_cancel_alarm(self) -> None:
         """Cancel alarm alerts."""
@@ -48,7 +55,6 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         self, max_entries: int = SERVICE_GET_LOG_MAX_ENTRIES
     ) -> ServiceResponse:
         """Retrieve last n log entries."""
-
         _LOGGER.debug("Retrieve last %s log entries.", max_entries)
 
         items: list[LogEntryType] = await self.ialarm_device.get_last_log_entries(
@@ -117,7 +123,6 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
             )
 
             self.state = ialarm_status
-            self.async_set_updated_data(ialarm_status)
         except ConnectionError as error:
             raise UpdateFailed(error) from error
         return ialarm_status

@@ -11,8 +11,6 @@ lovelace:
       icon: mdi:shield-home
       show_in_sidebar: true
 
-automation: !include automations.yaml
-
 script:
   test_disarm:
     alias: "Test Disarm (1234)"

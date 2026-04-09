@@ -42,9 +42,6 @@ async def async_setup_entry(
 class IAlarmSensorEntity(IAlarmEntity, SensorEntity):
     """IAlarm sensor device."""
 
-    _has_alarm = False
-    _has_anomaly = False
-
     def _update_attr_name(self) -> None:
         if self._has_alarm and self._has_anomaly:
             self._attr_native_value = "triggered; anomaly detected"
@@ -57,11 +54,16 @@ class IAlarmSensorEntity(IAlarmEntity, SensorEntity):
 
     def _get_sensor_data_attributes(self) -> dict[str, str]:
         """Get iAlarm status data."""
-        domain = DOMAIN
+        # Reset flags at the start of every evaluation so that zones
+        # that have returned to normal are not incorrectly reported as
+        # alarmed or anomalous from the previous update cycle.
+        self._has_alarm = False
+        self._has_anomaly = False
+
         ialarm_status_data: IAlarmStatusType | None = self.coordinator.data
 
         result: dict[str, str] = {}
-        result["Integration"] = domain
+        result["Integration"] = DOMAIN
 
         if not ialarm_status_data:
             self._update_attr_name()
@@ -109,6 +111,8 @@ class IAlarmSensorEntity(IAlarmEntity, SensorEntity):
     ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         super().__init__(coordinator, unique_id, name)
+        self._has_alarm = False
+        self._has_anomaly = False
         self._attr_name = "Zone status"
         self._attr_icon = "mdi:hazard-lights"
         self._update_attr_name()

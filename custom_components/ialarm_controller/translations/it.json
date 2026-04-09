@@ -55,7 +55,8 @@
             "disarmed": "Sistema disarmato",
             "armed_home": "Sistema armato parziale",
             "armed_away": "Sistema armato totale",
-            "triggered": "Allarme attivato"
+            "triggered": "Allarme attivato",
+            "cancel": "Avvisi di allarme annullati"
         }
     }
 }

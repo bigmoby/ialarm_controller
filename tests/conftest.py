@@ -31,6 +31,12 @@ def ialarm_api_fixture():
             return_value={"status_value": 0, "alarmed_zones": []}
         )
         mock_instance.get_last_log_entries = AsyncMock(return_value=[])
+        mock_instance.arm_away = AsyncMock()
+        mock_instance.arm_stay = AsyncMock()
+        mock_instance.disarm = AsyncMock()
+        mock_instance.cancel_alarm = AsyncMock()
+        mock_instance.disarm_and_cancel = AsyncMock(return_value=True)
+        mock_instance.shutdown = AsyncMock()
         yield mock_ialarm_api
 
 

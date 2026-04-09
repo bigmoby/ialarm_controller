@@ -82,15 +82,14 @@ async def test_alarm_control_panel_actions(
     ialarm_api.return_value.arm_stay.assert_not_called()
 
     # Test disarm without code (None) — should fail (not call API)
-    ialarm_api.return_value.disarm = AsyncMock()
-    ialarm_api.return_value.cancel_alarm = AsyncMock()
+    ialarm_api.return_value.disarm_and_cancel = AsyncMock(return_value=True)
     await hass.services.async_call(
         ALARM_DOMAIN,
         SERVICE_ALARM_DISARM,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    ialarm_api.return_value.disarm.assert_not_called()
+    ialarm_api.return_value.disarm_and_cancel.assert_not_called()
 
     # Test disarm with empty code — should fail
     await hass.services.async_call(
@@ -99,7 +98,7 @@ async def test_alarm_control_panel_actions(
         {ATTR_ENTITY_ID: entity_id, "code": ""},
         blocking=True,
     )
-    ialarm_api.return_value.disarm.assert_not_called()
+    ialarm_api.return_value.disarm_and_cancel.assert_not_called()
 
     # Test disarm with code — should succeed
     await hass.services.async_call(
@@ -108,8 +107,7 @@ async def test_alarm_control_panel_actions(
         {ATTR_ENTITY_ID: entity_id, "code": "1234"},
         blocking=True,
     )
-    ialarm_api.return_value.disarm.assert_awaited_once()
-    ialarm_api.return_value.cancel_alarm.assert_awaited_once()
+    ialarm_api.return_value.disarm_and_cancel.assert_awaited_once()
 
     # Test direct calls to verify internal validation and notifications (bypassing HA service schema)
     # This ensures 100% test coverage of our custom safety logic
@@ -131,12 +129,12 @@ async def test_alarm_control_panel_actions(
     panel_entity.hass = hass
 
     # Test internal disarm validation
-    ialarm_api.return_value.disarm.reset_mock()
+    ialarm_api.return_value.disarm_and_cancel.reset_mock()
     await panel_entity.async_alarm_disarm(None)
-    ialarm_api.return_value.disarm.assert_not_called()
+    ialarm_api.return_value.disarm_and_cancel.assert_not_called()
 
     await panel_entity.async_alarm_disarm("")
-    ialarm_api.return_value.disarm.assert_not_called()
+    ialarm_api.return_value.disarm_and_cancel.assert_not_called()
 
     # Test internal arm validation
     ialarm_api.return_value.arm_away.reset_mock()
@@ -180,8 +178,7 @@ async def test_alarm_control_panel_send_events(
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_EVENT: True}
     )
-    ialarm_api.return_value.disarm = AsyncMock()
-    ialarm_api.return_value.cancel_alarm = AsyncMock()
+    ialarm_api.return_value.disarm_and_cancel = AsyncMock(return_value=True)
     ialarm_api.return_value.arm_away = AsyncMock()
     ialarm_api.return_value.arm_stay = AsyncMock()
 

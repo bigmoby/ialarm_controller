@@ -11,15 +11,16 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = "ialarm_controller"
+_LOGGER = logging.getLogger(__name__)
 
 TRIGGER_TYPES = {
     "disarmed",
     "armed_home",
     "armed_away",
     "triggered",
+    "cancel",
 }
 
 EVENT_MAP = {
@@ -27,6 +28,7 @@ EVENT_MAP = {
     "armed_home": "ialarm_arm_stay",
     "armed_away": "ialarm_arm_away",
     "triggered": "ialarm_triggered",
+    "cancel": "cancel_alarm",
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(

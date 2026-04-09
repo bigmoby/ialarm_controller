@@ -36,6 +36,7 @@ async def test_get_triggers(
         "armed_home",
         "armed_away",
         "triggered",
+        "cancel",
     }
 
     trigger_types = {
@@ -67,6 +68,7 @@ async def test_if_fires_on_event(
         "armed_home": "ialarm_arm_stay",
         "armed_away": "ialarm_arm_away",
         "triggered": "ialarm_triggered",
+        "cancel": "cancel_alarm",
     }
 
     # Setup one automation for each trigger type

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from homeassistant.components import persistent_notification
@@ -107,8 +106,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
         super()._handle_coordinator_update()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        # Require a code to be passed for disarm operations
+        """Send disarm command, then ensure any active alarm is cleared."""
         if self._require_code_to_disarm and (code is None or code == ""):
             _LOGGER.error(
                 "Failed to disarm the alarm system. Please enter the disarm code."
@@ -121,26 +119,27 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
             )
             return
 
-        await self.coordinator.ialarm_device.disarm()
+        cleared = await self.coordinator.ialarm_device.disarm_and_cancel()
 
-        # Give the alarm panel time to process the disarm command and release the socket
-        # before sending the cancel_alarm command. This prevents socket timeouts.
-        await asyncio.sleep(2)
-
-        await self.coordinator.ialarm_device.cancel_alarm()
+        if not cleared:
+            _LOGGER.warning(
+                "iAlarm: disarm sent but panel did not confirm a non-triggered "
+                "state after all cancel attempts."
+            )
 
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_disarm was triggered")
-            event_data = {
-                "device_id": self.entity_id,
-                "type": "alarm_status",
-                "alarm_status": "DISARMED",
-            }
-            self.hass.bus.async_fire(event_type="ialarm_disarm", event_data=event_data)
+            self.hass.bus.async_fire(
+                event_type="ialarm_disarm",
+                event_data={
+                    "device_id": self.entity_id,
+                    "type": "alarm_status",
+                    "alarm_status": "DISARMED",
+                },
+            )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        # Require a code to be passed for arm operations
         if self._require_code_to_arm and (code is None or code == ""):
             _LOGGER.error("Failed to arm home the alarm system. Please enter the code.")
             persistent_notification.create(
@@ -159,7 +158,6 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        # Require a code to be passed for arm operations
         if self._require_code_to_arm and (code is None or code == ""):
             _LOGGER.error("Failed to arm away the alarm system. Please enter the code.")
             persistent_notification.create(
