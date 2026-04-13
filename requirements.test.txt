@@ -1,3 +1,3 @@
 -r requirements.txt
-pytest-homeassistant-custom-component==0.13.322
+pytest-homeassistant-custom-component==0.13.323
 syrupy>=5.0.0
