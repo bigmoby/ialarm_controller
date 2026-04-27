@@ -4,4 +4,4 @@ homeassistant>=2026.3.4
 pip>=26.0
 ruff>=0.14.2
 pyasyncialarm>=3.0.0
-pre-commit>=4.3.0
+pre-commit>=4.6.0
