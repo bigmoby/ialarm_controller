@@ -59,7 +59,7 @@ Run `make help` to see all available commands:
 | `make lint`        | Run all linting checks (ruff, pylint, mypy)                 |
 | `make format`      | Auto-format code with `ruff`                                |
 | `make dev`         | Start a local Home Assistant instance for manual testing    |
-| `make build`       | Build the distributable package                             |
+| `make build`       | [DEPRECATED] Build distributable package (handled by GitHub Release) |
 | `make pre-commit`  | Run all pre-commit hooks on the full codebase               |
 | `make update-deps` | Upgrade dependencies and pre-commit hooks                   |
 | `make clean`       | Remove build artifacts, htmlcov, and the venv               |

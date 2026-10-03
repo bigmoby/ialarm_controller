@@ -16,7 +16,7 @@ lint: ## Run all linting checks
 format: ## Format code with ruff
 	ruff format custom_components/ tests/
 
-build: ## Build the package
+build: ## [DEPRECATED] Build the package (handled by GitHub Actions release)
 	./scripts/build
 
 clean: ## Clean build artifacts

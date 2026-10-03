@@ -4,6 +4,11 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+echo "⚠️  DEPRECATION WARNING: 'scripts/build' is deprecated."
+echo "   Package building and distribution is now fully managed by GitHub Releases."
+echo "   See: .github/workflows/release.yml"
+echo ""
+
 # Auto-activate virtual environment if it exists
 if [ -f "venv/bin/activate" ]; then
     source venv/bin/activate
