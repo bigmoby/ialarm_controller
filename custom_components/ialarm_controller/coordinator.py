@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
@@ -32,6 +33,7 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         self.host: str = device.host
         self.mac = mac
         self.send_events = send_events
+        self._io_lock: asyncio.Lock = asyncio.Lock()
 
         super().__init__(
             hass,
@@ -42,12 +44,14 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
 
     async def async_shutdown(self) -> None:
         """Shut down the coordinator and close the alarm device connection."""
-        await self.ialarm_device.shutdown()
+        async with self._io_lock:
+            await self.ialarm_device.shutdown()
         await super().async_shutdown()
 
     async def async_cancel_alarm(self) -> None:
         """Cancel alarm alerts."""
-        await self.ialarm_device.cancel_alarm()
+        async with self._io_lock:
+            await self.ialarm_device.cancel_alarm()
         if self.send_events:
             self.hass.bus.async_fire(event_type="cancel_alarm")
 
@@ -57,9 +61,10 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         """Retrieve last n log entries."""
         _LOGGER.debug("Retrieve last %s log entries.", max_entries)
 
-        items: list[LogEntryType] = await self.ialarm_device.get_last_log_entries(
-            max_entries
-        )
+        async with self._io_lock:
+            items: list[LogEntryType] = await self.ialarm_device.get_last_log_entries(
+                max_entries
+            )
 
         if items:
             self.hass.bus.async_fire(event_type="ialarm_logs", event_data=items)
@@ -77,15 +82,31 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
             }
         return {"items": []}
 
+    async def async_arm_stay(self) -> None:
+        """Send arm stay/home command."""
+        async with self._io_lock:
+            await self.ialarm_device.arm_stay()
+
+    async def async_arm_away(self) -> None:
+        """Send arm away command."""
+        async with self._io_lock:
+            await self.ialarm_device.arm_away()
+
+    async def async_disarm_and_cancel(self) -> bool:
+        """Send disarm and cancel alarm command, confirming state clearance."""
+        async with self._io_lock:
+            return await self.ialarm_device.disarm_and_cancel()
+
     async def _async_update_data(self) -> IAlarmStatusType:
         """Fetch data from iAlarm."""
         try:
-            zone_status: list[
-                ZoneStatusType
-            ] = await self.ialarm_device.get_zone_status()
-            internal_alarm_status: AlarmStatusType = (
-                await self.ialarm_device.get_status(zone_status)
-            )
+            async with self._io_lock:
+                zone_status: list[
+                    ZoneStatusType
+                ] = await self.ialarm_device.get_zone_status()
+                internal_alarm_status: AlarmStatusType = (
+                    await self.ialarm_device.get_status(zone_status)
+                )
 
             alarm_status_value = IALARM_TO_HASS.get(
                 internal_alarm_status["status_value"]

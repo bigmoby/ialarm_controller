@@ -119,7 +119,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
             )
             return
 
-        cleared = await self.coordinator.ialarm_device.disarm_and_cancel()
+        cleared = await self.coordinator.async_disarm_and_cancel()
 
         if not cleared:
             _LOGGER.warning(
@@ -137,6 +137,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
                     "alarm_status": "DISARMED",
                 },
             )
+        await self.coordinator.async_request_refresh()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -149,12 +150,13 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
                 notification_id=NOTIFICATION_ID,
             )
             return
-        await self.coordinator.ialarm_device.arm_stay()
+        await self.coordinator.async_arm_stay()
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_arm_stay was triggered")
             self.hass.bus.async_fire(
                 event_type="ialarm_arm_stay", event_data={"alarm_status": "ARMED HOME"}
             )
+        await self.coordinator.async_request_refresh()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -167,9 +169,10 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
                 notification_id=NOTIFICATION_ID,
             )
             return
-        await self.coordinator.ialarm_device.arm_away()
+        await self.coordinator.async_arm_away()
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_arm_away was triggered")
             self.hass.bus.async_fire(
                 event_type="ialarm_arm_away", event_data={"alarm_status": "ARMED AWAY"}
             )
+        await self.coordinator.async_request_refresh()

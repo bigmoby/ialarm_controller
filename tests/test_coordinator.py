@@ -1,5 +1,6 @@
 """Test the iAlarm coordinator."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
@@ -114,3 +115,72 @@ async def test_coordinator_get_log(
     ialarm_api.return_value.get_last_log_entries = AsyncMock(return_value=[])
     response_empty = await coordinator.async_get_log()
     assert response_empty == {"items": []}
+
+
+async def test_coordinator_arm_commands(
+    hass: HomeAssistant,
+    mock_config_entry,
+    ialarm_api,
+) -> None:
+    """Test coordinator arm and disarm methods."""
+    ialarm_api.return_value.get_mac = AsyncMock(return_value="00:11:22:33:44:55")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    ialarm_api.return_value.arm_stay = AsyncMock()
+    ialarm_api.return_value.arm_away = AsyncMock()
+    ialarm_api.return_value.disarm_and_cancel = AsyncMock(return_value=True)
+
+    await coordinator.async_arm_stay()
+    ialarm_api.return_value.arm_stay.assert_awaited_once()
+
+    await coordinator.async_arm_away()
+    ialarm_api.return_value.arm_away.assert_awaited_once()
+
+    result = await coordinator.async_disarm_and_cancel()
+    ialarm_api.return_value.disarm_and_cancel.assert_awaited_once()
+    assert result is True
+
+
+async def test_coordinator_io_lock_serialization(
+    hass: HomeAssistant,
+    mock_config_entry,
+    ialarm_api,
+) -> None:
+    """Test that concurrent operations are serialized by _io_lock."""
+    ialarm_api.return_value.get_mac = AsyncMock(return_value="00:11:22:33:44:55")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+
+    execution_order: list[str] = []
+
+    async def slow_arm() -> None:
+        execution_order.append("slow_arm_start")
+        await asyncio.sleep(0.05)
+        execution_order.append("slow_arm_end")
+
+    async def fast_cancel() -> None:
+        execution_order.append("fast_cancel_start")
+        execution_order.append("fast_cancel_end")
+
+    ialarm_api.return_value.arm_away = AsyncMock(side_effect=slow_arm)
+    ialarm_api.return_value.cancel_alarm = AsyncMock(side_effect=fast_cancel)
+
+    # Launch both concurrently
+    await asyncio.gather(
+        coordinator.async_arm_away(),
+        coordinator.async_cancel_alarm(),
+    )
+
+    # slow_arm must complete before fast_cancel starts
+    assert execution_order == [
+        "slow_arm_start",
+        "slow_arm_end",
+        "fast_cancel_start",
+        "fast_cancel_end",
+    ]

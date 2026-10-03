@@ -78,9 +78,20 @@ tap_action:
     code: "1234"
 ```
 
+### Options & Code Configuration
+
+By default, the integration requires a PIN code for arming and disarming for security reasons. You can customize these requirements at any time:
+
+1. In Home Assistant, go to **Settings** -> **Devices & Services** -> **iAlarm**.
+2. Click **Configure** on the integration entry.
+3. You can toggle:
+   - **Send events**: (Default: `True`) Emits custom events on the Home Assistant bus (`ialarm_triggered`, `ialarm_disarm`, etc.).
+   - **Require code to arm**: (Default: `True`) Requires a PIN code when arming the alarm.
+   - **Require code to disarm**: (Default: `True`) Requires a PIN code when disarming. When enabled, attempting to disarm without a code generates an error and creates a persistent notification in Home Assistant (*"Failed to disarm the alarm system. Please enter the disarm code."*). If your setup does not use a PIN, simply uncheck this option.
+
 ## Custom Polling Interval (Advanced)
 
-Home Assistant strongly discourages configuring the integration's scanning frequency (poll interval) directly from the integration's UI to maintain stability and comply with architectural guidelines. The iAlarm integration uses a pre-calibrated default `SCAN_INTERVAL`.
+Home Assistant strongly discourages configuring the integration's scanning frequency (poll interval) directly from the integration's UI to maintain stability and comply with architectural guidelines. The iAlarm integration uses a pre-calibrated default `DEFAULT_SCAN_INTERVAL` (30 seconds).
 
 If you absolutely need to update the alarm status more frequently (or slower) than the default, you can do this safely using standard Home Assistant mechanisms:
 
@@ -88,7 +99,7 @@ If you absolutely need to update the alarm status more frequently (or slower) th
 2. Click on the 3 dots (options) next to the integration and select **System Options**.
 3. Toggle off **Enable polling for updates** (this stops the default continuous polling).
 4. Create an **Automation** in Home Assistant that triggers exactly at your desired custom interval (e.g. `Time pattern` every 10 seconds).
-5. In the Action of this automation, call the service **`homeassistant.update_entity`** and pick your `alarm_control_panel.ialarm_panel` entity.
+5. In the Action of this automation, call the action **`homeassistant.update_entity`** and pick your `alarm_control_panel.ialarm_panel` entity.
 
 ```yaml
 alias: "iAlarm Custom Polling (10s)"
@@ -96,48 +107,98 @@ trigger:
   - platform: time_pattern
     seconds: "/10"
 action:
-  - service: homeassistant.update_entity
+  - action: homeassistant.update_entity
     target:
       entity_id: alarm_control_panel.ialarm_panel
 ```
 
-## Automations
+## Notifications & Automations
 
-### Device Triggers (Recommended)
+You can easily set up notifications in Home Assistant to be alerted on your smartphone (via Home Assistant Companion App) or directly in the Home Assistant interface.
 
-The easiest way to automate your home based on the alarm state is through the Home Assistant UI.
-Go to **Settings** -> **Automations** -> **Create Automation** -> **Add Trigger**.
-Select the **iAlarm** device and you will see the following native triggers:
+### 1. Mobile App Push Notification (Alarm Triggered)
 
-- **Alarm system disarmed**
-- **Alarm system armed home** (stay)
-- **Alarm system armed away**
-- **Alarm system triggered**
-
-### Event Triggers
-
-The integration also fires legacy events for advanced usage: `ialarm_disarm`, `ialarm_arm_stay`, `ialarm_arm_away`, `ialarm_triggered`, `cancel_alarm`, `ialarm_logs`.
-
-#### Example: Trigger a Notification When iAlarm is Triggered
-
-This automation uses the `ialarm_triggered` event to send a notification with the zone name:
+Send an instant notification to your smartphone when the alarm is triggered, with the specific zone name that triggered the alarm:
 
 ```yaml
-alias: Alarm Zone Notification
-description: "Sends a notification when a zone in iAlarm is triggered."
+alias: "iAlarm: Notify on Triggered"
+description: "Send push notification when a zone in iAlarm triggers an alarm."
 triggers:
   - platform: event
     event_type: ialarm_triggered
-    variables:
-      triggered_zone: "{{ trigger.event.data.alarmed_zones[0].name }}"
-conditions: []
 actions:
-  - service: notify.persistent_notification
+  - action: notify.notify  # Or notify.mobile_app_<your_phone_name>
     data:
-      title: "Alarm Triggered"
-      message: "Attention: The zone [{{ triggered_zone }}] is in alarm!"
+      title: "🚨 ALARM TRIGGERED!"
+      message: "Attention: Zone [{{ trigger.event.data.alarmed_zones[0].name }}] is in alarm!"
+      data:
+        push:
+          sound: "critical"
 mode: single
 ```
+
+### 2. Mobile App Notification on Armed / Disarmed State Changes
+
+Receive a push notification whenever the alarm status changes:
+
+```yaml
+alias: "iAlarm: State Change Notification"
+description: "Send push notification when iAlarm is armed or disarmed."
+triggers:
+  - platform: event
+    event_type: ialarm_arm_away
+    id: armed_away
+  - platform: event
+    event_type: ialarm_arm_stay
+    id: armed_home
+  - platform: event
+    event_type: ialarm_disarm
+    id: disarmed
+actions:
+  - action: notify.notify
+    data:
+      title: "iAlarm Status"
+      message: >
+        {% if trigger.id == 'armed_away' %}
+          Alarm is now Armed Away 🛡️
+        {% elif trigger.id == 'armed_home' %}
+          Alarm is now Armed Home 🏠
+        {% else %}
+          Alarm has been Disarmed 🔓
+        {% endif %}
+mode: single
+```
+
+### 3. Persistent Notification in Home Assistant Interface
+
+Create a persistent alert in the Home Assistant sidebar / notification center:
+
+```yaml
+alias: "iAlarm: Persistent Alert on Trigger"
+triggers:
+  - platform: event
+    event_type: ialarm_triggered
+actions:
+  - action: persistent_notification.create
+    data:
+      title: "iAlarm Triggered"
+      message: "Zone [{{ trigger.event.data.alarmed_zones[0].name }}] went into alarm at {{ now().strftime('%H:%M:%S') }}."
+      notification_id: "ialarm_alert"
+mode: single
+```
+
+### Native Device Triggers (Via UI)
+
+If you prefer building automations visually in Home Assistant without writing YAML:
+1. Go to **Settings** -> **Automations & Scenes** -> **Create Automation**.
+2. Click **Add Trigger** and select **Device**.
+3. Choose your **iAlarm** device.
+4. Select one of the available native triggers:
+   - **Alarm system disarmed**
+   - **Alarm system armed home** (stay)
+   - **Alarm system armed away**
+   - **Alarm system triggered**
+5. Under **Actions**, click **Add Action** -> **Notifications** -> **Send notification** and select your mobile device or notification target.
 
 ## Services
 
