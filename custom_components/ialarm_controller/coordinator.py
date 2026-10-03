@@ -6,7 +6,7 @@ import asyncio
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pyasyncialarm.const import AlarmStatusType, LogEntryType, ZoneStatusType
@@ -96,6 +96,17 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         """Send disarm and cancel alarm command, confirming state clearance."""
         async with self._io_lock:
             return await self.ialarm_device.disarm_and_cancel()
+
+    @callback
+    def async_set_alarm_status(self, status: AlarmControlPanelState) -> None:
+        """Force an immediate status update without waiting for polling."""
+        zone_status = self.data["zone_status_list"] if self.data else []
+        new_data: IAlarmStatusType = IAlarmStatusType(
+            ialarm_status=status,
+            zone_status_list=zone_status,
+        )
+        self.state = new_data
+        self.async_set_updated_data(new_data)
 
     async def _async_update_data(self) -> IAlarmStatusType:
         """Fetch data from iAlarm."""

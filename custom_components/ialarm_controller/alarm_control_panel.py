@@ -8,6 +8,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -127,6 +128,8 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
                 "state after all cancel attempts."
             )
 
+        self.coordinator.async_set_alarm_status(AlarmControlPanelState.DISARMED)
+
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_disarm was triggered")
             self.hass.bus.async_fire(
@@ -137,7 +140,6 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
                     "alarm_status": "DISARMED",
                 },
             )
-        await self.coordinator.async_request_refresh()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -151,12 +153,12 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
             )
             return
         await self.coordinator.async_arm_stay()
+        self.coordinator.async_set_alarm_status(AlarmControlPanelState.ARMED_HOME)
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_arm_stay was triggered")
             self.hass.bus.async_fire(
                 event_type="ialarm_arm_stay", event_data={"alarm_status": "ARMED HOME"}
             )
-        await self.coordinator.async_request_refresh()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -170,9 +172,9 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
             )
             return
         await self.coordinator.async_arm_away()
+        self.coordinator.async_set_alarm_status(AlarmControlPanelState.ARMED_AWAY)
         if self.coordinator.send_events:
             _LOGGER.debug("Event ialarm_arm_away was triggered")
             self.hass.bus.async_fire(
                 event_type="ialarm_arm_away", event_data={"alarm_status": "ARMED AWAY"}
             )
-        await self.coordinator.async_request_refresh()

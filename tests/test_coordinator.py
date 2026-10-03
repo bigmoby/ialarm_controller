@@ -184,3 +184,22 @@ async def test_coordinator_io_lock_serialization(
         "fast_cancel_start",
         "fast_cancel_end",
     ]
+
+
+async def test_coordinator_async_set_alarm_status(
+    hass: HomeAssistant,
+    mock_config_entry,
+    ialarm_api,
+) -> None:
+    """Test forcing alarm status update optimistically without polling."""
+    ialarm_api.return_value.get_mac = AsyncMock(return_value="00:11:22:33:44:55")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    coordinator.async_set_alarm_status(AlarmControlPanelState.ARMED_AWAY)
+    assert coordinator.data["ialarm_status"] == AlarmControlPanelState.ARMED_AWAY
+
+    coordinator.async_set_alarm_status(AlarmControlPanelState.DISARMED)
+    assert coordinator.data["ialarm_status"] == AlarmControlPanelState.DISARMED

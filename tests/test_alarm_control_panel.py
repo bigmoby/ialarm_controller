@@ -47,6 +47,7 @@ async def test_alarm_control_panel_actions(
         blocking=True,
     )
     ialarm_api.return_value.arm_away.assert_awaited_once()
+    assert hass.states.get(entity_id).state == "armed_away"
 
     # Test arm away without code — should fail (HA ServiceValidationError)
 
@@ -69,6 +70,7 @@ async def test_alarm_control_panel_actions(
         blocking=True,
     )
     ialarm_api.return_value.arm_stay.assert_awaited_once()
+    assert hass.states.get(entity_id).state == "armed_home"
 
     # Test arm home without code — should fail (HA ServiceValidationError)
     ialarm_api.return_value.arm_stay.reset_mock()
@@ -108,6 +110,7 @@ async def test_alarm_control_panel_actions(
         blocking=True,
     )
     ialarm_api.return_value.disarm_and_cancel.assert_awaited_once()
+    assert hass.states.get(entity_id).state == "disarmed"
 
     # Test direct calls to verify internal validation and notifications (bypassing HA service schema)
     # This ensures 100% test coverage of our custom safety logic
