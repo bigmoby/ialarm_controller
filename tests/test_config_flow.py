@@ -1,5 +1,6 @@
 """Test the Antifurto365 iAlarm config flow."""
 
+import asyncio
 from unittest.mock import patch
 
 from custom_components.ialarm_controller.const import (
@@ -139,3 +140,60 @@ async def test_options_flow(
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == new_options
     mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+async def test_form_timeout(hass: HomeAssistant) -> None:
+    """Test an unresponsive panel shows cannot_connect instead of hanging."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    async def _hang() -> str:
+        await asyncio.Event().wait()
+        return TEST_MAC
+
+    with (
+        patch("custom_components.ialarm_controller.config_flow.CONNECT_TIMEOUT", 0.01),
+        patch(
+            "custom_components.ialarm_controller.config_flow.IAlarm.get_mac",
+            side_effect=_hang,
+        ),
+        patch(
+            "custom_components.ialarm_controller.config_flow.IAlarm.shutdown"
+        ) as mock_shutdown,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    mock_shutdown.assert_awaited_once()
+
+
+async def test_form_closes_connection(hass: HomeAssistant) -> None:
+    """Test the connection opened to read the MAC is closed afterwards."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "custom_components.ialarm_controller.config_flow.IAlarm.get_mac",
+            return_value=TEST_MAC,
+        ),
+        patch(
+            "custom_components.ialarm_controller.config_flow.IAlarm.shutdown"
+        ) as mock_shutdown,
+        patch(
+            "custom_components.ialarm_controller.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    mock_shutdown.assert_awaited_once()

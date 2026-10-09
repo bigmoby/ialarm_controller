@@ -41,6 +41,8 @@ async def test_setup_entry_exception(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # The connection is released before the setup is retried
+    ialarm_api.return_value.shutdown.assert_awaited_once()
 
 
 async def test_setup_entry_timeout(
@@ -57,6 +59,7 @@ async def test_setup_entry_timeout(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    ialarm_api.return_value.shutdown.assert_awaited_once()
 
 
 async def test_on_hass_stop(

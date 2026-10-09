@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from pyasyncialarm.pyasyncialarm import IAlarm
 
-from .const import DEFAULT_SEND_EVENTS, DOMAIN
+from .const import CONNECT_TIMEOUT, DEFAULT_SEND_EVENTS, DOMAIN
 from .coordinator import IAlarmConfigEntry, IAlarmCoordinator
 from .services import async_setup_services
 
@@ -48,9 +48,11 @@ async def async_setup_entry(
     ialarm_device = IAlarm(host, port)
 
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(CONNECT_TIMEOUT):
             mac = await ialarm_device.get_mac()
     except (TimeoutError, ConnectionError) as ex:
+        # Setup is retried later with a new IAlarm: don't leak this connection
+        await ialarm_device.shutdown()
         raise ConfigEntryNotReady from ex
 
     coordinator = IAlarmCoordinator(hass, config_entry, ialarm_device, mac, send_events)

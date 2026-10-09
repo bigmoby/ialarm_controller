@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -19,6 +20,7 @@ from pyasyncialarm.pyasyncialarm import IAlarm
 from .const import (
     CONF_REQUIRE_CODE_TO_ARM,
     CONF_REQUIRE_CODE_TO_DISARM,
+    CONNECT_TIMEOUT,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_REQUIRE_CODE_TO_ARM,
@@ -46,7 +48,13 @@ DATA_SCHEMA = vol.Schema(
 
 async def _get_device_mac(host: str, port: int) -> str:
     ialarm = IAlarm(host, port)
-    return await ialarm.get_mac()
+    try:
+        async with asyncio.timeout(CONNECT_TIMEOUT):
+            return await ialarm.get_mac()
+    finally:
+        # The library keeps a persistent connection: release it, the config
+        # entry setup opens its own.
+        await ialarm.shutdown()
 
 
 class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg,unused-ignore]
