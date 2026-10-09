@@ -9,6 +9,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from pyasyncialarm.const import StatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
 import pytest
+from pytest_homeassistant_custom_component.common import async_capture_events
 
 
 async def test_coordinator_update_data(
@@ -109,8 +110,12 @@ async def test_coordinator_get_log(
         return_value=[{"time": "12:00", "area": "0", "event": "arm", "name": "user"}]
     )
 
+    events = async_capture_events(hass, "ialarm_logs")
     response = await coordinator.async_get_log()
+    await hass.async_block_till_done()
     assert response["items"][0]["time"] == "12:00"
+    assert len(events) == 1
+    assert events[0].data == response
 
     ialarm_api.return_value.get_last_log_entries = AsyncMock(return_value=[])
     response_empty = await coordinator.async_get_log()

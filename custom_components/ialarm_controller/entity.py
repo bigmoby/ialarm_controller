@@ -13,8 +13,8 @@ Classes:
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from custom_components.ialarm_controller.const import DOMAIN
-from custom_components.ialarm_controller.coordinator import IAlarmCoordinator
+from .const import DOMAIN
+from .coordinator import IAlarmCoordinator
 
 
 class IAlarmEntity(CoordinatorEntity[IAlarmCoordinator]):

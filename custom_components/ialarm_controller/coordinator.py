@@ -5,10 +5,12 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel.const import AlarmControlPanelState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.json import JsonValueType
 from pyasyncialarm.const import AlarmStatusType, LogEntryType, ZoneStatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
 
@@ -16,13 +18,18 @@ from .const import DOMAIN, IALARM_TO_HASS, SERVICE_GET_LOG_MAX_ENTRIES, IAlarmSt
 
 _LOGGER = logging.getLogger(__name__)
 
+type IAlarmConfigEntry = ConfigEntry[IAlarmCoordinator]
+
 
 class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
     """Class to manage fetching iAlarm data."""
 
+    config_entry: IAlarmConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: IAlarmConfigEntry,
         device: IAlarm,
         mac: str,
         send_events: bool,
@@ -38,6 +45,7 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
@@ -66,21 +74,23 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
                 max_entries
             )
 
-        if items:
-            self.hass.bus.async_fire(event_type="ialarm_logs", event_data=items)
-            return {
-                "items": [
-                    {
-                        "time": item["time"],
-                        "area": item["area"],
-                        "event": item["event"],
-                        "name": item["name"],
-                    }
-                    for item in items
-                    if item is not None
-                ],
+        if not items:
+            return {"items": []}
+
+        log_entries: list[JsonValueType] = [
+            {
+                "time": item["time"],
+                "area": item["area"],
+                "event": item["event"],
+                "name": item["name"],
             }
-        return {"items": []}
+            for item in items
+            if item is not None
+        ]
+        self.hass.bus.async_fire(
+            event_type="ialarm_logs", event_data={"items": log_entries}
+        )
+        return {"items": log_entries}
 
     async def async_arm_stay(self) -> None:
         """Send arm stay/home command."""

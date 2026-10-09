@@ -2,11 +2,9 @@
 
 from typing import TypedDict
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.alarm_control_panel.const import AlarmControlPanelState
 from pyasyncialarm.const import ZoneStatusType
 from pyasyncialarm.pyasyncialarm import IAlarm
-import voluptuous as vol
 
 DATA_COORDINATOR = "ialarm_controller"
 
@@ -36,14 +34,6 @@ IALARM_TO_HASS = {
 SERVICE_GET_LOG = "get_log"
 SERVICE_GET_LOG_MAX_ENTRIES = 25
 
-GET_LOG_ACTION_SCHEMA = cv.make_entity_service_schema(
-    {vol.Required("max_entries"): vol.Coerce(int)}
-)
-
-ENTITY_SERVICES = {
-    SERVICE_GET_LOG: GET_LOG_ACTION_SCHEMA,
-}
-
 
 class IAlarmStatusType(TypedDict):
     """Represents the status of the iAlarm.
@@ -52,5 +42,5 @@ class IAlarmStatusType(TypedDict):
     - zone_status_list: List of zone statuses, each element is of type ZoneStatusType.
     """
 
-    ialarm_status: str | None
+    ialarm_status: AlarmControlPanelState | None
     zone_status_list: list[ZoneStatusType]

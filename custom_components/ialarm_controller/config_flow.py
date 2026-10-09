@@ -1,5 +1,7 @@
 """Config flow for Antifurto365 iAlarm integration."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -7,12 +9,12 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
+import probatio as vol
 from pyasyncialarm.pyasyncialarm import IAlarm
-import voluptuous as vol
 
 from .const import (
     CONF_REQUIRE_CODE_TO_ARM,
@@ -42,32 +44,29 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _get_device_mac(hass: HomeAssistant, host, port):
+async def _get_device_mac(host: str, port: int) -> str:
     ialarm = IAlarm(host, port)
     return await ialarm.get_mac()
 
 
-class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
+class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg,unused-ignore]
     """Handle a config flow for Antifurto365 iAlarm."""
 
     VERSION = 1
-
-    DOMAIN = DOMAIN
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> IAlarmOptionsFlow:
         """Create the options flow."""
-        return IAlarmOptionsFlow(config_entry)
+        return IAlarmOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        mac = None
+        errors: dict[str, str] = {}
 
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
@@ -78,8 +77,8 @@ class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
         try:
             # If we are able to get the MAC address, we are able to establish
             # a connection to the device.
-            mac = await _get_device_mac(self.hass, host, port)
-        except ConnectionError:
+            mac = await _get_device_mac(host, port)
+        except TimeoutError, ConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -96,12 +95,8 @@ class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
 
-class IAlarmOptionsFlow(OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
+class IAlarmOptionsFlow(OptionsFlowWithReload):
+    """Handle options; the entry is reloaded automatically on change."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

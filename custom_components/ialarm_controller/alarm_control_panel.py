@@ -5,29 +5,26 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelEntity,
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
+from homeassistant.components.alarm_control_panel.const import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from custom_components.ialarm_controller.entity import IAlarmEntity
-
-from . import IAlarmConfigEntry
 from .const import (
     CONF_REQUIRE_CODE_TO_ARM,
     CONF_REQUIRE_CODE_TO_DISARM,
     DEFAULT_REQUIRE_CODE_TO_ARM,
     DEFAULT_REQUIRE_CODE_TO_DISARM,
-    ENTITY_SERVICES,
     NOTIFICATION_ID,
     NOTIFICATION_TITLE,
+    SERVICE_GET_LOG_MAX_ENTRIES,
 )
-from .coordinator import IAlarmCoordinator
+from .coordinator import IAlarmConfigEntry, IAlarmCoordinator
+from .entity import IAlarmEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IAlarmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a iAlarm alarm control panel based on a config entry."""
     ialarm_coordinator = config_entry.runtime_data
@@ -45,13 +42,6 @@ async def async_setup_entry(
         [IAlarmPanel(ialarm_coordinator, config_entry, unique_id, config_entry.title)],
         False,
     )
-
-    platform = entity_platform.async_get_current_platform()
-
-    for service_name, service_schema in ENTITY_SERVICES.items():
-        platform.async_register_entity_service(
-            service_name, service_schema, f"async_{service_name}"
-        )
 
 
 class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
@@ -64,7 +54,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
     _attr_code_arm_required = True
-    _attr_code_format = CodeFormat.NUMBER
+    _attr_code_format: CodeFormat | None = CodeFormat.NUMBER
 
     def __init__(
         self,
@@ -106,13 +96,19 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
             self._attr_alarm_state = self.coordinator.data.get("ialarm_status")
         super()._handle_coordinator_update()
 
+    async def async_get_log(
+        self, max_entries: int = SERVICE_GET_LOG_MAX_ENTRIES
+    ) -> ServiceResponse:
+        """Retrieve the last n log entries (get_log service)."""
+        return await self.coordinator.async_get_log(max_entries)
+
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command, then ensure any active alarm is cleared."""
         if self._require_code_to_disarm and (code is None or code == ""):
             _LOGGER.error(
                 "Failed to disarm the alarm system. Please enter the disarm code."
             )
-            persistent_notification.create(
+            persistent_notification.async_create(
                 self.hass,
                 "Failed to disarm the alarm system.<br/>Please enter the disarm code.",
                 title=NOTIFICATION_TITLE,
@@ -145,7 +141,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
         """Send arm home command."""
         if self._require_code_to_arm and (code is None or code == ""):
             _LOGGER.error("Failed to arm home the alarm system. Please enter the code.")
-            persistent_notification.create(
+            persistent_notification.async_create(
                 self.hass,
                 "Failed to arm home the alarm system.<br/>Please enter the code.",
                 title=NOTIFICATION_TITLE,
@@ -164,7 +160,7 @@ class IAlarmPanel(IAlarmEntity, AlarmControlPanelEntity):
         """Send arm away command."""
         if self._require_code_to_arm and (code is None or code == ""):
             _LOGGER.error("Failed to arm away the alarm system. Please enter the code.")
-            persistent_notification.create(
+            persistent_notification.async_create(
                 self.hass,
                 "Failed to arm away the alarm system.<br/>Please enter the code.",
                 title=NOTIFICATION_TITLE,

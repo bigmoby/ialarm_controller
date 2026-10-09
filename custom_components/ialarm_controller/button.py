@@ -1,4 +1,4 @@
-"""Button for Shelly."""
+"""Buttons for the iAlarm integration."""
 
 from __future__ import annotations
 
@@ -9,12 +9,10 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from custom_components.ialarm_controller.entity import IAlarmEntity
-
-from . import IAlarmConfigEntry
-from .coordinator import IAlarmCoordinator
+from .coordinator import IAlarmConfigEntry, IAlarmCoordinator
+from .entity import IAlarmEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,7 +51,7 @@ BUTTONS: tuple[IAlarmButtonDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IAlarmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up iAlarm button entities from a config entry.
 

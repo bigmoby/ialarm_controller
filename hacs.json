@@ -1,5 +1,5 @@
 {
     "name": "IAlarm Home Assistant Integration",
     "render_readme": false,
-    "homeassistant": "2026.3.4"
+    "homeassistant": "2026.10.0"
 }

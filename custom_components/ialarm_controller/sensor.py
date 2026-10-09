@@ -7,14 +7,12 @@ import logging
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from pyasyncialarm.const import StatusType
 
-from custom_components.ialarm_controller.const import DOMAIN, IAlarmStatusType
-from custom_components.ialarm_controller.entity import IAlarmEntity
-
-from . import IAlarmConfigEntry
-from .coordinator import IAlarmCoordinator
+from .const import DOMAIN, IAlarmStatusType
+from .coordinator import IAlarmConfigEntry, IAlarmCoordinator
+from .entity import IAlarmEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +26,7 @@ IAlarmZoneStatusSensorDescription = SensorEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IAlarmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up iAlarm Zone Status sensors."""
     ialarm_coordinator = config_entry.runtime_data

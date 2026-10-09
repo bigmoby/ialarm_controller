@@ -1,8 +1,7 @@
 """Test the iAlarm init."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from custom_components.ialarm_controller import update_listener
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -79,23 +78,3 @@ async def test_on_hass_stop(
     await hass.async_block_till_done()
 
     coordinator.async_shutdown.assert_awaited_once()
-
-
-async def test_update_listener(
-    hass: HomeAssistant,
-    mock_config_entry,
-    ialarm_api,
-) -> None:
-    """Test the update listener reloads the entry."""
-    ialarm_api.return_value.get_mac = AsyncMock(return_value="00:11:22:33:44:55")
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ) as mock_reload:
-        await update_listener(hass, mock_config_entry)
-        await hass.async_block_till_done()
-        mock_reload.assert_called_once_with(mock_config_entry.entry_id)

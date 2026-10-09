@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from custom_components.ialarm_controller.alarm_control_panel import IAlarmPanel
+from custom_components.ialarm_controller.const import DOMAIN, SERVICE_GET_LOG
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -250,3 +251,30 @@ async def test_alarm_control_panel_state_property_none(
         mock_config_entry.title,
     )
     assert panel.state is None
+
+
+async def test_get_log_service(
+    hass: HomeAssistant,
+    mock_config_entry,
+    ialarm_api,
+) -> None:
+    """Test the get_log entity service returns the log entries."""
+    log_entry = {"time": "2026-10-09 10:00", "area": 1, "event": "Arm", "name": "x"}
+    ialarm_api.return_value.get_last_log_entries = AsyncMock(return_value=[log_entry])
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.mock_ialarm_config_entry_ialarm_panel"
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LOG,
+        {ATTR_ENTITY_ID: entity_id, "max_entries": 5},
+        blocking=True,
+        return_response=True,
+    )
+
+    ialarm_api.return_value.get_last_log_entries.assert_awaited_once_with(5)
+    assert response == {entity_id: {"items": [log_entry]}}

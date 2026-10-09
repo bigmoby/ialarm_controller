@@ -39,6 +39,8 @@ https://github.com/bigmoby/ialarm_controller
 
 3. Reboot Home Assistant.
 
+> Requires Home Assistant **2026.10.0** or newer.
+
 ## Usage:
 
 In Home Assistant->Settings->Device & services->Integration menu add the new integration IAlarm and configure it.
@@ -198,6 +200,7 @@ If you prefer building automations visually in Home Assistant without writing YA
    - **Alarm system armed home** (stay)
    - **Alarm system armed away**
    - **Alarm system triggered**
+   - **Alarm alerts canceled**
 5. Under **Actions**, click **Add Action** -> **Notifications** -> **Send notification** and select your mobile device or notification target.
 
 ## Services
@@ -209,8 +212,11 @@ action: ialarm_controller.get_log
 data:
   max_entries: 25
 target:
-  device_id: [your-device-id]
+  entity_id: alarm_control_panel.ialarm_panel
+response_variable: ialarm_log
 ```
+
+The action returns the log entries as a response (`items` list with `time`, `area`, `event`, `name`) and also fires the `ialarm_logs` event with the same payload (`trigger.event.data.items`).
 
 ## Develop
 

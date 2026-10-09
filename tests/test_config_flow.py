@@ -2,8 +2,13 @@
 
 from unittest.mock import patch
 
-from custom_components.ialarm_controller.const import DOMAIN
+from custom_components.ialarm_controller.const import (
+    CONF_REQUIRE_CODE_TO_ARM,
+    CONF_REQUIRE_CODE_TO_DISARM,
+    DOMAIN,
+)
 from homeassistant import config_entries
+from homeassistant.const import CONF_EVENT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -104,3 +109,33 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, ialarm_api
+) -> None:
+    """Test the options flow updates options and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    new_options = {
+        CONF_EVENT: False,
+        CONF_REQUIRE_CODE_TO_ARM: False,
+        CONF_REQUIRE_CODE_TO_DISARM: True,
+    }
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=new_options
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == new_options
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)

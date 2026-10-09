@@ -2,9 +2,9 @@ default_language_version:
   python: python3.14
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.8
+    rev: v0.16.10
     hooks:
-      - id: ruff
+      - id: ruff-check
         args:
           - --fix
       - id: ruff-format
@@ -23,7 +23,7 @@ repos:
       - id: check-toml
       - id: check-xml
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+    rev: v2.4.0
     hooks:
       - id: mypy
         args: [--strict]
