@@ -1,7 +1,7 @@
 """Test the iAlarm coordinator."""
 
 import asyncio
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.core import HomeAssistant
@@ -208,3 +208,87 @@ async def test_coordinator_async_set_alarm_status(
 
     coordinator.async_set_alarm_status(AlarmControlPanelState.DISARMED)
     assert coordinator.data["ialarm_status"] == AlarmControlPanelState.DISARMED
+
+
+ALARMED_ZONE = {
+    "zone_id": 1,
+    "name": "Main Door",
+    "types": [StatusType.ZONE_IN_USE, StatusType.ZONE_ALARM],
+}
+CLEAN_ZONE = {"zone_id": 1, "name": "Main Door", "types": [StatusType.ZONE_IN_USE]}
+
+
+@pytest.mark.parametrize("arm_method", ["arm_stay", "arm_away"])
+async def test_arm_clears_alarm_memory_first(
+    hass: HomeAssistant,
+    mock_config_entry,
+    ialarm_api,
+    arm_method: str,
+) -> None:
+    """Test arming clears the zone alarm memory left by a key fob disarm."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    device = ialarm_api.return_value
+    calls: list[str] = []
+    device.get_zone_status = AsyncMock(side_effect=[[ALARMED_ZONE], [CLEAN_ZONE]])
+    device.cancel_alarm = AsyncMock(side_effect=lambda: calls.append("clear"))
+    setattr(device, arm_method, AsyncMock(side_effect=lambda: calls.append("arm")))
+
+    with patch(
+        "custom_components.ialarm_controller.coordinator.CLEAR_MEMORY_RETRY_DELAY", 0
+    ):
+        await getattr(coordinator, f"async_{arm_method}")()
+
+    assert calls == ["clear", "arm"]
+
+
+async def test_arm_without_alarm_memory_does_not_clear(
+    hass: HomeAssistant,
+    mock_config_entry,
+    ialarm_api,
+) -> None:
+    """Test arming sends no clear command when no zone has alarm memory."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    device = ialarm_api.return_value
+    device.get_zone_status = AsyncMock(return_value=[CLEAN_ZONE])
+    device.cancel_alarm = AsyncMock()
+    device.arm_away = AsyncMock()
+
+    await coordinator.async_arm_away()
+
+    device.cancel_alarm.assert_not_awaited()
+    device.arm_away.assert_awaited_once()
+
+
+async def test_arm_when_alarm_memory_cannot_be_cleared(
+    hass: HomeAssistant,
+    mock_config_entry,
+    ialarm_api,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test arming still proceeds, with a warning, if the memory stays set."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    device = ialarm_api.return_value
+    device.get_zone_status = AsyncMock(return_value=[ALARMED_ZONE])
+    device.cancel_alarm = AsyncMock()
+    device.arm_stay = AsyncMock()
+
+    with patch(
+        "custom_components.ialarm_controller.coordinator.CLEAR_MEMORY_RETRY_DELAY", 0
+    ):
+        await coordinator.async_arm_stay()
+
+    assert device.cancel_alarm.await_count == 3
+    device.arm_stay.assert_awaited_once()
+    assert "still set after 3 clear attempts" in caplog.text

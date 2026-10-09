@@ -34,6 +34,10 @@ IALARM_TO_HASS = {
 SERVICE_GET_LOG = "get_log"
 SERVICE_GET_LOG_MAX_ENTRIES = 25
 
+# Clearing the zone alarm memory before arming
+CLEAR_MEMORY_MAX_ATTEMPTS = 3
+CLEAR_MEMORY_RETRY_DELAY = 1.0
+
 
 class IAlarmStatusType(TypedDict):
     """Represents the status of the iAlarm.
