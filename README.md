@@ -126,7 +126,7 @@ Send an instant notification to your smartphone when the alarm is triggered, wit
 alias: "iAlarm: Notify on Triggered"
 description: "Send push notification when a zone in iAlarm triggers an alarm."
 triggers:
-  - platform: event
+  - trigger: event
     event_type: ialarm_triggered
 actions:
   - action: notify.notify  # Or notify.mobile_app_<your_phone_name>
@@ -147,13 +147,13 @@ Receive a push notification whenever the alarm status changes:
 alias: "iAlarm: State Change Notification"
 description: "Send push notification when iAlarm is armed or disarmed."
 triggers:
-  - platform: event
+  - trigger: event
     event_type: ialarm_arm_away
     id: armed_away
-  - platform: event
+  - trigger: event
     event_type: ialarm_arm_stay
     id: armed_home
-  - platform: event
+  - trigger: event
     event_type: ialarm_disarm
     id: disarmed
 actions:
@@ -178,7 +178,7 @@ Create a persistent alert in the Home Assistant sidebar / notification center:
 ```yaml
 alias: "iAlarm: Persistent Alert on Trigger"
 triggers:
-  - platform: event
+  - trigger: event
     event_type: ialarm_triggered
 actions:
   - action: persistent_notification.create
@@ -203,20 +203,75 @@ If you prefer building automations visually in Home Assistant without writing YA
    - **Alarm alerts canceled**
 5. Under **Actions**, click **Add Action** -> **Notifications** -> **Send notification** and select your mobile device or notification target.
 
-## Services
+## Events
 
-Invoke get iAlarm log service example:
+When **Send events** is enabled (default), the integration fires these events on the Home Assistant bus:
 
+| Event | When | `trigger.event.data` |
+|---|---|---|
+| `ialarm_triggered` | The panel is detected in alarm (polling) | `alarm_status: "TRIGGERED"`, `alarmed_zones`: list of zones (`zone_id`, `name`, `types`) |
+| `ialarm_arm_away` | Armed away from Home Assistant | `alarm_status: "ARMED AWAY"` |
+| `ialarm_arm_stay` | Armed home from Home Assistant | `alarm_status: "ARMED HOME"` |
+| `ialarm_disarm` | Disarmed from Home Assistant | `alarm_status: "DISARMED"`, `device_id`, `type: "alarm_status"` |
+| `cancel_alarm` | Alarm alerts canceled from Home Assistant | — |
+| `ialarm_logs` | The `get_log` action returned at least one entry (always fired) | `items`: list of log entries (`time`, `area`, `event`, `name`) |
+
+## Actions
+
+### `ialarm_controller.get_log`
+
+Retrieves the last `max_entries` (1–100) entries of the panel log. The entries are returned as the action response and are also fired as the `ialarm_logs` event, with the same payload:
+
+```yaml
+{
+  "items": [
+    {"time": "2026-10-09T10:00:00", "area": 1, "event": "Arming Report", "name": "..."}
+  ]
+}
 ```
-action: ialarm_controller.get_log
-data:
-  max_entries: 25
-target:
-  entity_id: alarm_control_panel.ialarm_panel
-response_variable: ialarm_log
+
+Use it in a script or automation with `response_variable`:
+
+```yaml
+actions:
+  - action: ialarm_controller.get_log
+    target:
+      entity_id: alarm_control_panel.ialarm_panel
+    data:
+      max_entries: 10
+    response_variable: ialarm_log
+  - action: notify.notify
+    data:
+      title: "iAlarm log"
+      message: >
+        {% for item in ialarm_log['alarm_control_panel.ialarm_panel']['items'] %}
+        {{ item.time }} - {{ item.event }} ({{ item.name }})
+        {% endfor %}
 ```
 
-The action returns the log entries as a response (`items` list with `time`, `area`, `event`, `name`) and also fires the `ialarm_logs` event with the same payload (`trigger.event.data.items`).
+The response is keyed by the target entity id, so use the entity id of your panel.
+
+Or react to the `ialarm_logs` event, for example after pressing the **Log alerts** button:
+
+```yaml
+alias: "iAlarm: Notify last log entry"
+triggers:
+  - trigger: event
+    event_type: ialarm_logs
+actions:
+  - action: notify.notify
+    data:
+      title: "iAlarm log"
+      message: >
+        {% set last = trigger.event.data['items'][0] %}
+        {{ last.time }} - {{ last.event }} ({{ last.name }})
+mode: single
+```
+
+> [!IMPORTANT]
+> **Upgrading from 2.1.x:** the `ialarm_logs` event used to carry the log entries as a bare list. Since 2.2.0 the payload is `{"items": [...]}`, the same as the `get_log` response. In your automations and templates replace `trigger.event.data[...]` with `trigger.event.data['items'][...]`.
+>
+> Use `['items']` rather than `.items`: in Jinja templates `.items` resolves to the dictionary method, not to the key.
 
 ## Develop
 
