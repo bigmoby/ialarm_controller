@@ -12,6 +12,9 @@ DEFAULT_PORT = 18034
 DEFAULT_HOST = "192.168.1.81"
 DEFAULT_SEND_EVENTS = True
 
+# Max time to wait for the panel MAC address when setting up or configuring
+CONNECT_TIMEOUT = 10
+
 CONF_REQUIRE_CODE_TO_ARM = "require_code_to_arm"
 CONF_REQUIRE_CODE_TO_DISARM = "require_code_to_disarm"
 DEFAULT_REQUIRE_CODE_TO_ARM = True

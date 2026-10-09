@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "ialarm_controller"
-version     = "2.2.0"
+version     = "2.2.1"
 license     = "MIT"
 license-files = ["LICENSE.md"]
 description = "iAlarm custom component for Home Assistant"
