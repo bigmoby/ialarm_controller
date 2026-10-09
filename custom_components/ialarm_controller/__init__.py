@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TypeAlias
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
     CONF_HOST,
@@ -15,14 +13,25 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from pyasyncialarm.pyasyncialarm import IAlarm
 
-from .const import DEFAULT_SEND_EVENTS
-from .coordinator import IAlarmCoordinator
+from .const import DEFAULT_SEND_EVENTS, DOMAIN
+from .coordinator import IAlarmConfigEntry, IAlarmCoordinator
+from .services import async_setup_services
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.SENSOR, Platform.BUTTON]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BUTTON, Platform.SENSOR]
 
-IAlarmConfigEntry: TypeAlias = ConfigEntry[IAlarmCoordinator]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+__all__ = ["IAlarmConfigEntry"]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the iAlarm integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
@@ -44,7 +53,7 @@ async def async_setup_entry(
     except (TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
-    coordinator = IAlarmCoordinator(hass, ialarm_device, mac, send_events)
+    coordinator = IAlarmCoordinator(hass, config_entry, ialarm_device, mac, send_events)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -58,8 +67,6 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_connection)
     )
 
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
-
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
@@ -70,8 +77,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload iAlarm config."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def update_listener(hass: HomeAssistant, config_entry: IAlarmConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)

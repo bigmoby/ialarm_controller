@@ -9,7 +9,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-import voluptuous as vol
+import probatio as vol
 
 from .const import DOMAIN
 
@@ -67,7 +67,7 @@ async def async_attach_trigger(
 
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
-            event_trigger.CONF_PLATFORM: "event",
+            CONF_PLATFORM: "event",
             event_trigger.CONF_EVENT_TYPE: event_type,
         }
     )

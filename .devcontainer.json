@@ -1,6 +1,6 @@
 {
     "name": "bigmoby/ialarm_controller",
-    "image": "mcr.microsoft.com/vscode/devcontainers/python:dev-3.12-bullseye",
+    "image": "mcr.microsoft.com/devcontainers/python:3.14",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
         8123

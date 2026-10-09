@@ -5,24 +5,43 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel.const import AlarmControlPanelState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from pyasyncialarm.const import AlarmStatusType, LogEntryType, ZoneStatusType
+from homeassistant.util.json import JsonValueType
+from pyasyncialarm.const import (
+    AlarmStatusType,
+    LogEntryType,
+    StatusType,
+    ZoneStatusType,
+)
 from pyasyncialarm.pyasyncialarm import IAlarm
 
-from .const import DOMAIN, IALARM_TO_HASS, SERVICE_GET_LOG_MAX_ENTRIES, IAlarmStatusType
+from .const import (
+    CLEAR_MEMORY_MAX_ATTEMPTS,
+    CLEAR_MEMORY_RETRY_DELAY,
+    DOMAIN,
+    IALARM_TO_HASS,
+    SERVICE_GET_LOG_MAX_ENTRIES,
+    IAlarmStatusType,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+type IAlarmConfigEntry = ConfigEntry[IAlarmCoordinator]
 
 
 class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
     """Class to manage fetching iAlarm data."""
 
+    config_entry: IAlarmConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: IAlarmConfigEntry,
         device: IAlarm,
         mac: str,
         send_events: bool,
@@ -38,6 +57,7 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
@@ -66,30 +86,75 @@ class IAlarmCoordinator(DataUpdateCoordinator[IAlarmStatusType]):
                 max_entries
             )
 
-        if items:
-            self.hass.bus.async_fire(event_type="ialarm_logs", event_data=items)
-            return {
-                "items": [
-                    {
-                        "time": item["time"],
-                        "area": item["area"],
-                        "event": item["event"],
-                        "name": item["name"],
-                    }
-                    for item in items
-                    if item is not None
-                ],
+        if not items:
+            return {"items": []}
+
+        log_entries: list[JsonValueType] = [
+            {
+                "time": item["time"],
+                "area": item["area"],
+                "event": item["event"],
+                "name": item["name"],
             }
-        return {"items": []}
+            for item in items
+            if item is not None
+        ]
+        self.hass.bus.async_fire(
+            event_type="ialarm_logs", event_data={"items": log_entries}
+        )
+        return {"items": log_entries}
+
+    async def _async_get_alarmed_zone_ids(self) -> list[int]:
+        """Return the in-use zones that still have the ZONE_ALARM flag set."""
+        zones = await self.ialarm_device.get_zone_status()
+        return [
+            zone["zone_id"]
+            for zone in zones
+            if StatusType.ZONE_ALARM in zone["types"]
+            and StatusType.ZONE_IN_USE in zone["types"]
+        ]
+
+    async def _async_clear_alarm_memory(self) -> None:
+        """Clear the zone alarm memory left by a disarm not sent from HA.
+
+        Disarming from a key fob or keypad does not send the CLEAR command, so
+        the panel keeps the ZONE_ALARM flag on the zones that were violated.
+        Arming with that memory still set reports the panel as triggered right
+        away. Must be called with the I/O lock held.
+        """
+        alarmed = await self._async_get_alarmed_zone_ids()
+        for attempt in range(1, CLEAR_MEMORY_MAX_ATTEMPTS + 1):
+            if not alarmed:
+                return
+            _LOGGER.debug(
+                "iAlarm: clearing alarm memory of zones %s before arming "
+                "(attempt %d/%d)",
+                alarmed,
+                attempt,
+                CLEAR_MEMORY_MAX_ATTEMPTS,
+            )
+            await self.ialarm_device.cancel_alarm()
+            await asyncio.sleep(CLEAR_MEMORY_RETRY_DELAY)
+            alarmed = await self._async_get_alarmed_zone_ids()
+
+        if alarmed:
+            _LOGGER.warning(
+                "iAlarm: alarm memory of zones %s still set after %d clear "
+                "attempts, arming anyway",
+                alarmed,
+                CLEAR_MEMORY_MAX_ATTEMPTS,
+            )
 
     async def async_arm_stay(self) -> None:
         """Send arm stay/home command."""
         async with self._io_lock:
+            await self._async_clear_alarm_memory()
             await self.ialarm_device.arm_stay()
 
     async def async_arm_away(self) -> None:
         """Send arm away command."""
         async with self._io_lock:
+            await self._async_clear_alarm_memory()
             await self.ialarm_device.arm_away()
 
     async def async_disarm_and_cancel(self) -> bool:
